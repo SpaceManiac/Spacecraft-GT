@@ -1,7 +1,8 @@
 Spacecraft GT
-The SpaceManiac Minecraft Server: Survival Multiplayer
+Spacecraft: Survival Multiplayer
 
-Spacecraft GT is a Minecraft (http://minecraft.net/) server written in C#.
+Spacecraft GT is a new, Survival Multiplayer rendition of Spacecraft, the
+SpaceManiac Minecraft (http://minecraft.net/) Server. It is written in C#.
 It is soon to boast some neat custom behavior and a mob and physics engine
 written completely from scratch.
 

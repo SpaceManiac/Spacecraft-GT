@@ -5,11 +5,11 @@ using System.Runtime.CompilerServices;
 // Change them to the values specific to your project.
 
 [assembly: AssemblyTitle("Spacecraft GT")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Spacecraft: Survival Multiplayer")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("")]
-[assembly: AssemblyCopyright("")]
+[assembly: AssemblyCopyright("(c) 2010 SpaceManiac")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

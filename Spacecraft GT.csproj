@@ -34,6 +34,13 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="Spacecraft.cs" />
+    <Compile Include="Constants\Blocks.cs" />
+    <Compile Include="Constants\Color.cs" />
+    <Compile Include="Constants\Packets.cs" />
+    <Compile Include="Constants\Ranks.cs" />
+    <Compile Include="Utils\Configuration.cs" />
+    <Compile Include="Utils\NBT.cs" />
+    <Compile Include="Server.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
@@ -43,4 +50,7 @@
       </Properties>
     </MonoDevelop>
   </ProjectExtensions>
+  <ItemGroup>
+    <Folder Include="Constants\" />
+  </ItemGroup>
 </Project>

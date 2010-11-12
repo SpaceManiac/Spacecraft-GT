@@ -1,8 +1,8 @@
-using System;
-using System.Net.Sockets;
-using System.Threading;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Net.Sockets;
+using System.Threading;
 
 namespace SpacecraftGT
 {
@@ -15,7 +15,7 @@ namespace SpacecraftGT
 		public string Motd;
 		
 		public Map World;
-		// public List<Player> PlayerList;
+		public List<Player> PlayerList;
 		
 		private TcpListener _Listener;
 		
@@ -28,7 +28,7 @@ namespace SpacecraftGT
 			Motd = Configuration.Get("motd", "Powered by " + Color.Green + "Spacecraft");
 			
 			World = null;
-			// PlayerList = new List<Player>();
+			PlayerList = new List<Player>();
 			_Listener = new TcpListener(new IPEndPoint(IPAddress.Any, Port));
 		}
 		
@@ -49,12 +49,25 @@ namespace SpacecraftGT
 			Spacecraft.Log("Block at 0, 96, 0: " + c.GetBlock(0, 96, 0));
 			
 			while (Running) {
-				// Shenanigans.
+				// Check for new connections
+				while (_Listener.Pending()) {
+					AcceptConnection(_Listener.AcceptTcpClient());
+					//Running = false;
+				}
+				
+				// Rest
 				Thread.Sleep(10);
-				Running = false;
 			}
 			
 			World.ForceSave();
+		}
+		
+		// ====================
+		// Private helpers.
+		
+		private void AcceptConnection(TcpClient client)
+		{
+			PlayerList.Add(new Player(client));
 		}
 	}
 }

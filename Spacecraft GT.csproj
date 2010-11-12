@@ -44,6 +44,9 @@
     <Compile Include="Map.cs" />
     <Compile Include="Chunk.cs" />
     <Compile Include="Utils\Pair.cs" />
+    <Compile Include="Utils\Builder.cs" />
+    <Compile Include="Connection.cs" />
+    <Compile Include="Player.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

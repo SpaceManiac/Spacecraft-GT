@@ -14,7 +14,7 @@ namespace SpacecraftGT
 			_Config = new Dictionary<string, string>();
 
 			if (!File.Exists(_CONFIG_FILENAME)) {
-				Spacecraft.Log("Generating configuration.txt");
+				Spacecraft.Log("Generating " + _CONFIG_FILENAME);
 				WriteDefaultConfig();
 			}
 			

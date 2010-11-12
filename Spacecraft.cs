@@ -24,9 +24,13 @@ namespace SpacecraftGT
 				Random = new Random();
 			}
 			
-			
 			Server = new Server();
-			Server.Run();
+			try {
+				Server.Run();
+			}
+			catch (Exception e) {
+				Log("Fatal uncaught exception: " + e);
+			}
 			
 			Log("Bye!");
 		}
@@ -56,7 +60,24 @@ namespace SpacecraftGT
 		
 		public static string Base64Encode(string str)
 		{
-		   return Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(str));
+			return Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(str));
+		}
+		
+		public static string Base36Encode(long input)
+		{
+			if (input == 0) return "0";
+			string chars = "0123456789abcdefghijklmnopqrstuvwxyz";
+			bool negative = (input < 0);
+			StringBuilder sb = new StringBuilder();
+			if (negative) {
+				input = -input;
+				sb.Append("-");
+			}
+			while (input > 0) {
+				sb.Insert((negative ? 1 : 0), chars[(int)(input % 36)]);
+				input /= 36;
+			}
+			return sb.ToString();
 		}
 	}
 }

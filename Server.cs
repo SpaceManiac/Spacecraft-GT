@@ -45,14 +45,14 @@ namespace SpacecraftGT
 			Spacecraft.Log("Listening on port " + Port);
 			Running = true;
 			
+			Chunk c = World.GetChunk(0, 0);
+			Spacecraft.Log("Block at 0, 96, 0: " + c.GetBlock(0, 96, 0));
+			
 			while (Running) {
 				// Shenanigans.
 				Thread.Sleep(10);
 				Running = false;
 			}
-			
-			Chunk c = World.GetChunkAt(160, -104);
-			Spacecraft.Log("(160, -104) = " + c.CalculateFilename());
 			
 			World.ForceSave();
 		}

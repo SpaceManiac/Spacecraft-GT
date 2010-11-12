@@ -22,7 +22,9 @@ namespace SpacecraftGT
 		
 		public void ForceSave()
 		{
-			// ...
+			foreach(KeyValuePair<Pair<int, int>, Chunk> kvp in _Chunks) {
+				kvp.Value.Save();
+			}
 		}
 		
 		public Chunk GetChunk(int chunkX, int chunkZ)

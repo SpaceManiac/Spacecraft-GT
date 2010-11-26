@@ -20,7 +20,7 @@ namespace SpacecraftGT
         {
             if (verbosityLevel == (Verbosity)(-1))
             {
-                Log.WriteLine("Verbosity not defined, defaulting to ERROR");
+                Log.WriteLine("Verbosity not defined, defaulting to ALL");
                 verbosityLevel = Verbosity.ALL;
             }
         }
@@ -59,7 +59,6 @@ namespace SpacecraftGT
         {
             Write(message + System.Environment.NewLine, category);
         }
-
 
     }
 }

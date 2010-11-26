@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
+using System.Collections.Generic;
 
 namespace SpacecraftGT
 {
@@ -18,7 +19,7 @@ namespace SpacecraftGT
 			// _Log = null;
 			Log("Spacecraft is starting...");
 			
-			Configuration.Load();
+			//Configuration.Load();
 			
 			if (Configuration.Defined("random-seed")) {
 				Random = new Random(Configuration.GetInt("random-seed", 0));
@@ -81,5 +82,18 @@ namespace SpacecraftGT
 			}
 			return sb.ToString();
 		}
+
+
+        public static IEnumerator<int> EnumerateIntegers()
+        {
+            int i = 0;
+            while (true)
+            {
+                i = i + 1;
+                if (i == Int32.MaxValue)
+                    throw new OverflowException("Ran out of integers");
+                yield return i;
+            }
+        }
 	}
 }

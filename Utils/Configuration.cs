@@ -9,7 +9,7 @@ namespace SpacecraftGT
 		private static Dictionary<string, string> _Config;
 		private const string _CONFIG_FILENAME = "configuration.txt";
 
-		public static void Load()
+		static Configuration()
 		{
 
 			_Config = new Dictionary<string, string>();

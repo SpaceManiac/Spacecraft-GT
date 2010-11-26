@@ -4,6 +4,16 @@ namespace SpacecraftGT
 {
 	public abstract class Entity
 	{
+        static Int32 LastID = 0;
+        static Int32 NextID
+        {
+            get
+            {
+                return ++LastID;
+            }
+        }
+
+
 		public double X;
 		public double Y;
 		public double Z;
@@ -11,7 +21,7 @@ namespace SpacecraftGT
 		
 		public Entity()
 		{
-			EntityID = Spacecraft.Random.Next();
+            EntityID = Entity.NextID;
 		}
 		
 	}

@@ -38,6 +38,10 @@ namespace SpacecraftGT
             S.Append(Enum.GetName(Verbosity.NOTICE.GetType(), category).PadRight(50));
             S.Append(message);
 
+            Console.Write(Enum.GetName(Verbosity.NOTICE.GetType(), category));
+            Console.Write("\t");
+            Console.WriteLine(message);
+
             string str = S.ToString();
 
             if (Configuration.Defined("debug-log"))

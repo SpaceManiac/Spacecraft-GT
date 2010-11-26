@@ -9,13 +9,11 @@ namespace SpacecraftGT.Constants
     {
         static byte[] ToBytes(this string S)
         {
-            byte[] ret = new byte[S.Length + 1];
-            ret[0] = (byte) S.Length;
-            for (int i = 0; i < S.Length; i++)
-            {
-                ret[i + 1] = (byte)S[i];
-            }
-            return ret;
+            var B = new Builder<Byte>();
+            B.Append((byte) (S.Length / 255));
+            B.Append((byte) (S.Length % 256));
+            B.Append(UTF8Encoding.UTF8.GetBytes(S));
+            return B.ToArray();
         }
 
     }

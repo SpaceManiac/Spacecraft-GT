@@ -67,7 +67,7 @@ namespace SpacecraftGT
 			"bsbs",            // add to inventory
 			"bib",             // arm animation
 			"",
-			"bisiiibbs",       // named entity spawn - 0x14
+			"bitiiibbs",       // named entity spawn - 0x14
 			"bisbiiibbb",      // pickup spawn
 			"bii",             // collect item
 			"bibiii",          // add object/vehicle

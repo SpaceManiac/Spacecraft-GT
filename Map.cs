@@ -40,5 +40,17 @@ namespace SpacecraftGT
 		{
 			return GetChunk((int)(blockX / 16) - (blockX < 0 ? 1 : 0), (int)(blockZ / 16) - (blockZ < 0 ? 1 : 0));
 		}
+		
+		public List<Chunk> GetChunksInRange(Chunk c)
+		{
+			List<Chunk> r = new List<Chunk>();
+			r.Add(c);
+			return r;
+		}
+		
+		public List<Entity> EntitiesIn(Chunk c)
+		{
+			return new List<Entity>();
+		}
 	}
 }

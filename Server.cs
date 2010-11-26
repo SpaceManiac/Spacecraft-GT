@@ -13,6 +13,7 @@ namespace SpacecraftGT
 		public string WorldName;
 		public string Name;
 		public string Motd;
+		public string ServerHash;
 		
 		public Map World;
 		public List<Player> PlayerList;
@@ -26,6 +27,7 @@ namespace SpacecraftGT
 			WorldName = Configuration.Get("world", "world");
 			Name = Configuration.Get("server-name", "Minecraft Server");
 			Motd = Configuration.Get("motd", "Powered by " + Color.Green + "Spacecraft");
+			ServerHash = "-";
 			
 			World = null;
 			PlayerList = new List<Player>();

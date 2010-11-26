@@ -4,6 +4,9 @@ using System.Threading;
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
+using System.IO.Compression;
+using System.IO;
+using zlib;
 
 namespace SpacecraftGT
 {
@@ -16,19 +19,21 @@ namespace SpacecraftGT
 		private Queue<byte[]> _TransmitQueue;
 		private bool _Running;
 		private byte[] _Buffer;
+		private Player _Player;
 		
-		public Connection(TcpClient client)
+		public Connection(TcpClient client, Player player)
 		{
 			_Client = client;
 			IPString = _Client.Client.RemoteEndPoint.ToString();
 			
 			_Thread = new Thread(ConnectionThread);
-			_Thread.Name = "SC-GT Player " + _Client.GetHashCode();
+			_Thread.Name = "SC-Player " + _Client.GetHashCode();
 			_Thread.Start();
 			
 			_TransmitQueue = new Queue<byte[]>();
 			_Running = true;
 			_Buffer = new byte[0];
+			_Player = player;
 		}
 		
 		public void Stop()
@@ -38,53 +43,65 @@ namespace SpacecraftGT
 		
 		public void Transmit(PacketType type, params object[] args)
 		{
+			Spacecraft.Log("Transmitting: " + type + "(" + (byte)type + ")");
+			string structure = (type == PacketType.Disconnect ? "bs" : PacketStructure.Data[(byte) type]);
+			
 			Builder<Byte> packet = new Builder<Byte>();
-			string structure = PacketStructure.Data[_Buffer[0]];
+			packet.Append((byte) type);
+			
 			byte[] bytes;
-			for (int i = 0; i < structure.Length; ++i) {
-				switch (structure[i]) {
-					case 'b':		// byte(1)
-						packet.Append((byte) args[i-1]);
-						break;
+			int current = 1;
+			try {
+				for (int i = 1; i < structure.Length; ++i) {
+					current = i;
+					switch (structure[i]) {
+						case 'b':		// byte(1)
+							packet.Append((byte) args[i-1]);
+							break;
+							
+						case 's':		// short(2)
+							packet.Append(BitConverter.GetBytes(IPAddress.HostToNetworkOrder((short) args[i-1])));
+							break;
+							
+						case 'f':		// float(4)
+							bytes = BitConverter.GetBytes((float) args[i-1]);
+							//for (int j = 3; j >= 0; --j) {
+							//	packet.Append(bytes[j]);
+							//}
+							packet.Append(bytes);
+							break;
+							
+						case 'i':		// int(4)
+							packet.Append(BitConverter.GetBytes(IPAddress.HostToNetworkOrder((int) args[i-1])));
+							break;
+							
+						case 'd':		// double(8)
+							bytes = BitConverter.GetBytes((double) args[i-1]);
+							//for (int j = 7; j >= 0; --j) {
+							//	packet.Append(bytes[j]);
+							//}
+							packet.Append(bytes);
+							break;
+							
+						case 'l':		// long(8)
+							packet.Append(BitConverter.GetBytes(IPAddress.HostToNetworkOrder((long) args[i-1])));
+							break;
 						
-					case 's':		// short(2)
-						packet.Append(BitConverter.GetBytes(IPAddress.HostToNetworkOrder((short) args[i-1])));
-						break;
+						case 't':		// string
+							bytes = Encoding.UTF8.GetBytes((string) args[i-1]);
+							packet.Append(BitConverter.GetBytes(IPAddress.HostToNetworkOrder((short) bytes.Length)));
+							packet.Append(bytes);
+							break;
 						
-					case 'f':		// float(4)
-						bytes = BitConverter.GetBytes((float) args[i-1]);
-						//for (int j = 3; j >= 0; --j) {
-						//	packet.Append(bytes[j]);
-						//}
-						packet.Append(bytes);
-						break;
-						
-					case 'i':		// int(4)
-						packet.Append(BitConverter.GetBytes(IPAddress.HostToNetworkOrder((int) args[i-1])));
-						break;
-						
-					case 'd':		// double(8)
-						bytes = BitConverter.GetBytes((double) args[i-1]);
-						//for (int j = 7; j >= 0; --j) {
-						//	packet.Append(bytes[j]);
-						//}
-						packet.Append(bytes);
-						break;
-						
-					case 'l':		// long(8)
-						packet.Append(BitConverter.GetBytes(IPAddress.HostToNetworkOrder((long) args[i-1])));
-						break;
-					
-					case 't':		// string
-						bytes = Encoding.UTF8.GetBytes((string) args[i-1]);
-						packet.Append(BitConverter.GetBytes(IPAddress.HostToNetworkOrder((short) bytes.Length)));
-						packet.Append(bytes);
-						break;
-					
-					case 'x':		// byte array
-						packet.Append((byte[]) args[i-1]);
-						break;
+						case 'x':		// byte array
+							packet.Append((byte[]) args[i-1]);
+							break;
+					}
 				}
+			}
+			catch (InvalidCastException) {
+				Spacecraft.Log("Invalid cast in Transmit " + type + ", argument " + current);
+				throw;
 			}
 			_TransmitQueue.Enqueue(packet.ToArray());
 		}
@@ -95,6 +112,18 @@ namespace SpacecraftGT
 			while (_Running) {
 				while (_TransmitQueue.Count > 0) {
 					TransmitRaw(_TransmitQueue.Dequeue());
+				}
+				
+				if (!_Client.Client.Connected) {
+					// Never reaches here
+					_Client.Close();
+					if (_Player.Spawned) {
+						Spacecraft.Log(_Player.Username + " has left");
+					} else {
+						Spacecraft.Log("Anonymous connection thread stopped.");
+					}
+					_Running = false;
+					break;
 				}
 				
 				if (_Client.GetStream().DataAvailable) {
@@ -108,6 +137,13 @@ namespace SpacecraftGT
 		private void TransmitRaw(byte[] packet)
 		{
 			_Client.GetStream().Write(packet, 0, packet.Length);
+		}
+		
+		public void Disconnect(string message)
+		{
+			Transmit(PacketType.Disconnect, message);
+			_Client.GetStream().Flush();
+			_Client.Close();
 		}
 		
 		private void IncomingData()
@@ -144,7 +180,7 @@ namespace SpacecraftGT
 		private Pair<int, object[]> CheckCompletePacket()
 		{
 			PacketType type = (PacketType) _Buffer[0];
-			string structure = PacketStructure.Data[_Buffer[0]];
+			string structure = (type == PacketType.Disconnect ? "bs" : PacketStructure.Data[_Buffer[0]]);
 			int bufPos = 0;
 			
 			Pair<int, object[]> nPair = new Pair<int, object[]>(0, null);
@@ -204,10 +240,51 @@ namespace SpacecraftGT
 			return new Pair<int, object[]>(bufPos, data.ToArray());
 		}
 		
+		public void SendChunk(Chunk chunk)
+		{
+			Transmit(PacketType.PreChunk, chunk.ChunkX, chunk.ChunkZ, (byte) 1);
+			
+			byte[] uncompressed = chunk.GetBytes();
+			MemoryStream mem = new MemoryStream();
+			ZOutputStream stream = new ZOutputStream(mem, zlibConst.Z_BEST_COMPRESSION);
+			stream.Write(uncompressed, 0, uncompressed.Length);
+			stream.Close();
+			byte[] data = mem.ToArray();
+			
+			Transmit(PacketType.MapChunk, 16 * chunk.ChunkX, (short) 0, 16 * chunk.ChunkZ,
+				(byte) 15, (byte) 127, (byte) 15, data.Length, data);
+		}
+		
 		private void ProcessPacket(object[] packet)
 		{
 			PacketType type = (PacketType) (byte) packet[0];
-			Spacecraft.Log("Packet (" + type + ") length = " + packet.Length + " [0] = " + (string)packet[1]);
+			
+			//Spacecraft.Log("Packet received: " + type);
+			
+			switch(type) {
+				case PacketType.Handshake: {
+					_Player.Username = (string) packet[1];
+					Transmit(PacketType.Handshake, Spacecraft.Server.ServerHash);
+					break;
+				}
+				case PacketType.LoginDetails: {
+					if ((int) packet[1] != Spacecraft.ProtocolVersion) {
+						Disconnect("Invalid protocol version");
+					}
+					if ((string) packet[2] != _Player.Username) {
+						Disconnect("Sent invalid username");
+					}
+					
+					// TODO: Implement name verification
+					
+					Transmit(PacketType.LoginDetails, _Player.EntityID,
+						Spacecraft.Server.Name, Spacecraft.Server.Motd,
+						/* World.Seed */ (long) 0, /* World.Dimension */ (byte) 0);
+					_Player.Spawn();
+					
+					break;
+				}
+			}
 		}
 	}
 }

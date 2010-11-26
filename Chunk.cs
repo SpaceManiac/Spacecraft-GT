@@ -38,6 +38,16 @@ namespace SpacecraftGT
 			RawReader.Close();
 		}
 		
+		public byte[] GetBytes()
+		{
+			Builder<Byte> builder = new Builder<Byte>();
+			builder.Append((byte[]) _Structure["Level"]["Blocks"].Payload);
+			builder.Append((byte[]) _Structure["Level"]["Data"].Payload);
+			builder.Append((byte[]) _Structure["Level"]["BlockLight"].Payload);
+			builder.Append((byte[]) _Structure["Level"]["SkyLight"].Payload);
+			return builder.ToArray();
+		}
+		
 		// ====================
 		// Tile gets/sets
 		
@@ -89,7 +99,8 @@ namespace SpacecraftGT
 			return y + (z * 128 + (x * 128 * 16));
 		}
 		
-		private string CalculateFilename() {
+		private string CalculateFilename()
+		{
 			int modX = (ChunkX >= 0 ? ChunkX % 64 : 64 - Math.Abs(ChunkX) % 64);
 			int modZ = (ChunkZ >= 0 ? ChunkZ % 64 : 64 - Math.Abs(ChunkZ) % 64);
 			StringBuilder sb = new StringBuilder();

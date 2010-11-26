@@ -84,16 +84,5 @@ namespace SpacecraftGT
 		}
 
 
-        public static IEnumerator<int> EnumerateIntegers()
-        {
-            int i = 0;
-            while (true)
-            {
-                i = i + 1;
-                if (i == Int32.MaxValue)
-                    throw new OverflowException("Ran out of integers");
-                yield return i;
-            }
-        }
 	}
 }

@@ -11,6 +11,7 @@ namespace SpacecraftGT
 
 		public static void Load()
 		{
+
 			_Config = new Dictionary<string, string>();
 
 			if (!File.Exists(_CONFIG_FILENAME)) {
@@ -59,11 +60,8 @@ namespace SpacecraftGT
 
 		public static bool GetBool(string key, bool def)
 		{
-			string val = Get(key, null);
-			if (val == null)
-				return def;
-			else
-				return StrIsTrue(val);
+			string val = Get(key, def.ToString());
+			return StrIsTrue(val);
 		}
 
 		public static int GetInt(string key, int def)

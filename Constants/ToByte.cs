@@ -7,7 +7,6 @@ namespace SpacecraftGT.Constants
 {
     static class ByteClass
     {
-
         static byte[] ToBytes(this short S)
         {
             // Big-Endian because that's what Minecraft uses. 

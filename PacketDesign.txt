@@ -17,9 +17,9 @@ Chat Message (0x03)
 Player Inventory (0x05)
 	Type	int
 	Count	short
-	Payload	object[]
+	Payload	byte[]
 
-Use Entity? (0x07)
+Use Entity (0x07)
 	User	int
 	Target	int
 	Punching	bool

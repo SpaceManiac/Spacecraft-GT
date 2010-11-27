@@ -24,6 +24,5 @@ namespace SpacecraftGT.Constants
             B.Append(UTF8Encoding.UTF8.GetBytes(S));
             return B.ToArray();
         }
-
     }
 }

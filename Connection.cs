@@ -40,7 +40,12 @@ namespace SpacecraftGT
 		{
 			_Running = false;
 		}
-		
+
+        public void Transmit(Packet Obj)
+        {
+            _TransmitQueue.Enqueue(Obj.Save());
+        }
+
 		public void Transmit(PacketType type, params object[] args)
 		{
 			Spacecraft.Log("Transmitting: " + type + "(" + (byte)type + ")");

@@ -37,14 +37,12 @@ Player Position (0x0B)
 	Z	double
 	OnGround	bool
 
-Derived from packet 0x0A
-
 Player Look (0x0C)
 	Yaw	float
 	Pitch	float
 	On Ground	bool
 
-Player Position & Look (0x0D)
+Player Position Look (0x0D)
 	X	double
 	Y	double
 	Stance	double

@@ -9,11 +9,7 @@ namespace SpacecraftGT
     {
         public static byte[] ToBytes(this short S)
         {
-            // Big-Endian because that's what Minecraft uses. 
-            return new byte[] { 
-                (byte)(S / 256), 
-                (byte)(S % 256) 
-            };
+            return BitConverter.GetBytes(S);
         }
 
         public static byte[] ToBytes(this float F)

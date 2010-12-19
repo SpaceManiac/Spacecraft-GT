@@ -3,6 +3,7 @@ using System.Text;
 using NBT;
 using System.IO;
 using System.IO.Compression;
+using System.Collections.Generic;
 
 namespace SpacecraftGT
 {
@@ -10,6 +11,8 @@ namespace SpacecraftGT
 	{
 		public int ChunkX;
 		public int ChunkZ;
+		public List<Entity> Entities;
+		
 		private BinaryTag _Structure;
 		private Map _World;
 		
@@ -17,25 +20,71 @@ namespace SpacecraftGT
 		{
 			ChunkX = chunkX;
 			ChunkZ = chunkZ;
+			Entities = new List<Entity>();
 			_World = world;
 			Load();
 		}
 		
+		public void Generate()
+		{
+			byte[] blocks = new byte[32768], data = new byte[16384];
+			byte[] skylight = new byte[16384], light = new byte[16384];
+			byte[] height = new byte[256];
+			BinaryTag[] entities = new BinaryTag[0], tileEntities = new BinaryTag[0];
+			
+			for (int i = 0; i < 16348; ++i) {
+				blocks[i*2] = (byte) Block.Rock;
+				skylight[i] = 0xFF;
+				light[i] = 0xFF;
+			}
+			
+			BinaryTag[] structure = new BinaryTag[] {
+				new BinaryTag(TagType.ByteArray, blocks, "Blocks"),
+				new BinaryTag(TagType.ByteArray, data, "Data"),
+				new BinaryTag(TagType.ByteArray, skylight, "SkyLight"),
+				new BinaryTag(TagType.ByteArray, light, "BlockLight"),
+				new BinaryTag(TagType.ByteArray, height, "HeightMap"),
+				new BinaryTag(TagType.List, entities, "Entities"),
+				new BinaryTag(TagType.List, tileEntities, "TileEntities"),
+				new BinaryTag(TagType.Long, (long) 0, "LastUpdate"),
+				new BinaryTag(TagType.Int, (int) ChunkX, "xPos"),
+				new BinaryTag(TagType.Int, (int) ChunkZ, "zPos"),
+				new BinaryTag(TagType.Byte, (byte) 0, "TerrainPopulated")
+			};
+			
+			_Structure = new BinaryTag(TagType.Compound, new BinaryTag[] {
+				new BinaryTag(TagType.Compound, structure, "Level")
+			});
+			Save();
+		}
+		
 		public void Save()
 		{
-			StreamWriter RawWriter = new StreamWriter(CalculateFilename());
-			GZipStream Writer = new GZipStream(RawWriter.BaseStream, CompressionMode.Compress);
-			NbtWriter.WriteTagStream(_Structure, Writer);
-			Writer.Close();
+			string filename = CalculateFilename();
+			int i = filename.LastIndexOfAny(new char[] { '/', '\\', ':' });
+			Directory.CreateDirectory(filename.Substring(0, i));
+			
+			StreamWriter rawWriter = new StreamWriter(filename);
+			GZipStream writer = new GZipStream(rawWriter.BaseStream, CompressionMode.Compress);
+			NbtWriter.WriteTagStream(_Structure, writer);
+			writer.Close();
 		}
 		
 		public void Load()
 		{
-			StreamReader RawReader = new StreamReader(CalculateFilename());
-			GZipStream Reader = new GZipStream(RawReader.BaseStream, CompressionMode.Decompress);
-			_Structure = NbtParser.ParseTagStream(Reader);
-			Reader.Close();
-			RawReader.Close();
+			try {
+				StreamReader rawReader = new StreamReader(CalculateFilename());
+				GZipStream reader = new GZipStream(rawReader.BaseStream, CompressionMode.Decompress);
+				_Structure = NbtParser.ParseTagStream(reader);
+				reader.Close();
+				rawReader.Close();
+			}
+			catch (FileNotFoundException) {
+				Generate();
+			}
+			catch (DirectoryNotFoundException) {
+				Generate();
+			}
 		}
 		
 		public byte[] GetBytes()
@@ -110,6 +159,12 @@ namespace SpacecraftGT
 					  .Append("c.").Append(Spacecraft.Base36Encode(ChunkX))
 					  .Append(".").Append(Spacecraft.Base36Encode(ChunkZ))
 					  .Append(".dat").ToString());
+		}			
+		
+		override public string ToString()
+		{
+			return "[Chunk at " + ChunkX + ", " + ChunkZ + "]";
 		}
+		
 	}
 }

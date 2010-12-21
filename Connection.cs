@@ -255,11 +255,31 @@ namespace SpacecraftGT
 			stream.Write(uncompressed, 0, uncompressed.Length);
 			stream.Close();
 			byte[] data = mem.ToArray();
-			
-			Transmit(PacketType.MapChunk, 16 * chunk.ChunkX, (short) 0, 16 * chunk.ChunkZ,
+
+            MapChunkPacket Packet = new MapChunkPacket
+            {
+                X = chunk.ChunkX * 16,
+                Y = 0,
+                Z = chunk.ChunkZ * 16,
+                Size_X = 15,
+                Size_Y = 127,
+                Size_Z = 15,
+                Size = data.Length,
+                Data = data,
+            };
+
+            Transmit(Packet);
+
+            // ===
+            
+            Transmit(PacketType.MapChunk, 16 * chunk.ChunkX, (short) 0, 16 * chunk.ChunkZ,
 				(byte) 15, (byte) 127, (byte) 15, data.Length, data);
 		}
 		
+
+
+
+
 		private void ProcessPacket(object[] packet)
 		{
 			PacketType type = (PacketType) (byte) packet[0];

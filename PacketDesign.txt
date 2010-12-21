@@ -86,3 +86,13 @@ Pickup Spawn (0x15)
 
 Disconnect (0xFF)
 	Reason	string
+
+Map Chunk (0x33)
+	X 	int 	128 	Block X Coordinate
+	Y 	short 	0 	Block Y Coordinate
+	Z 	int 	-192 	Block Z Coordinate
+	Size_X 	byte 	15 	Size_X is Actual X Size -1
+	Size_Y 	byte 	127 	Size_Y is Actual Y Size -1
+	Size_Z 	byte 	15 	Size_Z is Actual Z Size -1
+	Size 	int 	3663 	Size of compressed region data
+	Data 	byte[] 	… 	The region data is compressed using ZLib Deflate function. 

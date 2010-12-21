@@ -62,8 +62,10 @@ namespace SpacecraftGT
 
         private static Byte[] GetNextByteArray(byte[] data, ref int Index)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
+            int f = sizeof(HandshakePacket);
         }
 
     }
 }
+>>>>>>> d743f22fb0f8ec701c0f3f5fca4ccce24bf2669c

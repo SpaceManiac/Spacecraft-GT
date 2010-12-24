@@ -3,21 +3,7 @@ using System;
 namespace SpacecraftGT
 {
 	public abstract class Entity
-<<<<<<< HEAD
 	{
-        static Int32 LastID = 0;
-        static Int32 NextID
-        {
-            get
-            {
-                return ++LastID;
-            }
-        }
-
-
-=======
-	{
-	
 		protected double _LastX;
 		protected double _LastY;
 		protected double _LastZ;
@@ -25,7 +11,6 @@ namespace SpacecraftGT
 		protected sbyte _LastPitch;
 	
 		public Chunk CurrentChunk;
->>>>>>> adf2f1b29257cfb4a4970f199a627eb43b076461
 		public double X;
 		public double Y;
 		public double Z;
@@ -34,14 +19,9 @@ namespace SpacecraftGT
 		public int EntityID;
 		
 		public Entity()
-<<<<<<< HEAD
-		{
-            EntityID = Entity.NextID;
-=======
 		{
 			CurrentChunk = null;
 			EntityID = Spacecraft.Random.Next();
->>>>>>> adf2f1b29257cfb4a4970f199a627eb43b076461
 		}
 		
 		virtual public void Update()

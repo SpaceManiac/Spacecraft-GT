@@ -9,7 +9,7 @@ namespace SpacecraftGT
 		Handshake = 0x02,           //   <->
 		Message = 0x03,             //   <->
 		TimeUpdate = 0x04,          //   <--
-		PlayerInventory = 0x05,     //   <->
+		EntityEquipment = 0x05,     //   <->
 		SpawnPosition = 0x06,       //   <--
 		InteractEntity = 0x07,		//   -->
 		UpdateHealth = 0x08,		//   <--
@@ -21,7 +21,7 @@ namespace SpacecraftGT
 		PlayerDigging = 0x0E,       //   -->
 		PlayerBlockPlace = 0x0F,    //   -->
 		PlayerHolding = 0x10,       //   <->
-		AddToInventory = 0x11,      //   <--
+		// Unused space
 		ArmAnimation = 0x12,        //   <->
 		// Unused space
 		NamedEntitySpawn = 0x14,    //   <--
@@ -46,8 +46,17 @@ namespace SpacecraftGT
 		MultiBlockChange = 0x34,    //   <--
 		BlockChange = 0x35,         //   <--
 		// Unused space
-		ComplexEntity = 0x3B,       //   <--
 		Explosion = 0x3C,			//   <--
+		// Unused space
+		OpenWindow = 0x64,			//   <--
+		CloseWindow = 0x65,			//   <--
+		WindowClick	= 0x66,			//   -->
+		WindowSetSlot = 0x67,		//   <--
+		WindowItems = 0x68,			//   <--
+		WindowProgress = 0x69,		//   <--
+		Transaction = 0x6A,			//   <--
+		// Unused space
+		UpdateSign = 0x82,			//   <->
 		// Unused space
 		Disconnect = 0xFF           //   <->
 	}
@@ -69,10 +78,10 @@ namespace SpacecraftGT
 			"bt",				// handshake
 			"bt",				// chat message
 			"bl",				// time update
-			"bisx",				// player inventory
+			"biss",				// entity equipment
 			"biii",				// spawn position
 			"biib",				// interact entity
-			"bb",				// update health
+			"bs",				// update health
 			"b",				// respawn
 			"bb",				// player base
 			"bddddb",			// player position
@@ -80,8 +89,8 @@ namespace SpacecraftGT
 			"bddddffb",			// player position+look
 			"bbibib",			// player digging
 			"bsibib",			// player block place
-			"bis",				// player holding
-			"bsbs",				// add to inventory
+			"bs",				// player holding
+			"",					// unused space
 			"bib",				// arm animation
 			"",					// unused space
 			"bitiiibbs",		// named entity spawn
@@ -107,8 +116,28 @@ namespace SpacecraftGT
 			"biisxxx",			// multi-block change
 			"bibibb",			// block change
 			"", "", "", "", "",	// unused space
-			"bisisx",			// complex entity
+			"",					// unused space
 			"bdddfib",			// explosion
+			"", "", "", "", "",
+			"", "", "", "", "",
+			"", "", "", "", "",
+			"", "", "", "", "",
+			"", "", "", "", "",
+			"", "", "", "", "",
+			"", "", "", "", "",
+			"", "", "", "",		// unused space
+			"bbbtb",			// open window
+			"bb",				// close window
+			"bbsbssbb",			// window click
+			"bbssbb",			// window slot
+			"bbsx",				// window items
+			"bbss",				// window progress
+			"bbsb",				// transaction
+			"", "", "", "", "",
+			"", "", "", "", "",
+			"", "", "", "", "",
+			"", "", "", "",		// unused space
+			"bisitttt",			// update sign
 			// special handling for disconnect
 		};
 	}

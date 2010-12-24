@@ -33,15 +33,17 @@ namespace SpacecraftGT
 			Z = Spacecraft.Server.World.SpawnZ + 0.5;
 			Update();
 			_Conn.Transmit(PacketType.SpawnPosition, (int)X, (int)Y, (int)Z);
-			_Conn.Transmit(PacketType.PlayerPositionLook, X, Y, Y, Z, (float) 0, (float) 0, (byte) 1);
+			_Conn.Transmit(PacketType.PlayerPositionLook, X, Y, Y, Z, (float) 0, (float) 0, (sbyte) 1);
 			// _Conn.Transmit(PacketType.NamedEntitySpawn, EntityID, "Player", (int)X, (int)Y, (int)Z, (byte)0, (byte)0, (short)0);
 		}
 		
-		public void Despawn()
+		override public void Despawn()
 		{
-			Spacecraft.Server.Despawn(this);
+			if (!Spawned) return;
 			Spawned = false;
 			CurrentChunk = null;
+			Spacecraft.Server.Despawn(this);
+			base.Despawn();
 		}
 		
 		public void SendMessage(string message)
@@ -57,6 +59,7 @@ namespace SpacecraftGT
 		
 		public override void Update()
 		{
+			if (!Spawned) return;
 			Chunk newChunk = Spacecraft.Server.World.GetChunkAt((int)X, (int)Z);
 			
 			if (newChunk != CurrentChunk) {
@@ -67,7 +70,7 @@ namespace SpacecraftGT
 				}
 				foreach (Chunk c in VisibleChunks) {
 					if (!newVisibleChunks.Contains(c)) {
-						_Conn.Transmit(PacketType.PreChunk, c.ChunkX, c.ChunkZ, (byte) 0);
+						_Conn.Transmit(PacketType.PreChunk, c.ChunkX, c.ChunkZ, (sbyte) 0);
 					}
 				}
 				foreach (Chunk c in newVisibleChunks) {
@@ -101,24 +104,49 @@ namespace SpacecraftGT
 			base.Update();
 		}
 		
+		public void UpdateEntity(Entity e, double dx, double dy, double dz, bool rotchanged, bool forceabs)
+		{
+			if (!Spawned) return;
+			if (dx == 0 && dy == 0 && dz == 0) {
+				if (rotchanged) {
+					_Conn.Transmit(PacketType.EntityLook, e.EntityID, (sbyte) e.Yaw, (sbyte) e.Pitch);
+				}
+			} else if (Math.Abs(dx) < 4 && Math.Abs(dy) < 4 && Math.Abs(dz) < 4 && !forceabs) {
+				if (rotchanged) {
+					_Conn.Transmit(PacketType.EntityLookAndMove, e.EntityID,
+						(sbyte) (dx * 32), (sbyte) (dy * 32), (sbyte) (dz * 32),
+						(sbyte) e.Yaw, (sbyte) e.Pitch);
+				} else {
+					_Conn.Transmit(PacketType.EntityRelativeMove, e.EntityID,
+						(sbyte) (dx * 32), (sbyte) (dy * 32), (sbyte) (dz * 32));
+				}
+			} else {
+				_Conn.Transmit(PacketType.EntityTeleport, e.EntityID,
+					(int) (e.X * 32), (int) (e.Y * 32), (int) (e.Z * 32),
+					(sbyte) e.Yaw, (sbyte) e.Pitch);
+			}
+		}
+		
 		private void DespawnEntity(Entity e)
 		{
-			if (e == this) return;
+			if (!Spawned || e == this) return;
 			_Conn.Transmit(PacketType.DestroyEntity, e.EntityID);
 		}
 		
 		private void SpawnEntity(Entity e)
 		{
-			if (e == this) return;
+			if (!Spawned || e == this) return;
 			
 			if (e is Player) {
 				Player p = (Player) e;
 				_Conn.Transmit(PacketType.NamedEntitySpawn, p.EntityID,
-					p.Username, (int)p.X, (int)p.Y, (int)p.Z,
-					(byte)0, (byte)0, (short)1);
+					p.Username, (int)(p.X * 32), (int)(p.Y * 32), (int)(p.Z * 32),
+					(sbyte)0, (sbyte)0, (short) Block.TNT);
 			} else {
 				SendMessage(Color.Purple + "Spawning " + e);
+				return;
 			}
+			_Conn.Transmit(PacketType.Entity, e.EntityID);
 		}
 		
 		override public string ToString()

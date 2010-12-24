@@ -58,8 +58,8 @@ namespace SpacecraftGT
 				for (int i = 1; i < structure.Length; ++i) {
 					current = i;
 					switch (structure[i]) {
-						case 'b':		// byte(1)
-							packet.Append((byte) args[i-1]);
+						case 'b':		// sbyte(1)
+							packet.Append((byte) (sbyte) args[i-1]);
 							break;
 							
 						case 's':		// short(2)
@@ -117,7 +117,6 @@ namespace SpacecraftGT
 			Stopwatch clock = new Stopwatch();
 			clock.Start();
 			double lastKeepAlive = 0;
-			double lastUpdateChunks = 0;
 			
 			while (_Running) {
 				while (_TransmitQueue.Count > 0) {
@@ -144,17 +143,12 @@ namespace SpacecraftGT
 					IncomingData();
 				}
 				
-				if (lastKeepAlive + 10 < clock.Elapsed.TotalSeconds) {
+				if (lastKeepAlive + 20 < clock.Elapsed.TotalSeconds) {
 					Transmit(PacketType.KeepAlive);
 					lastKeepAlive = clock.Elapsed.TotalSeconds;
 				}
 				
-				if (lastUpdateChunks + 2 < clock.Elapsed.TotalSeconds) {
-					_Player.Update();
-					lastUpdateChunks = clock.Elapsed.TotalSeconds;
-				}
-				
-				Thread.Sleep(10);
+				Thread.Sleep(30);
 			}
 		}
 		
@@ -163,12 +157,12 @@ namespace SpacecraftGT
 			try {
 				_Client.GetStream().Write(packet, 0, packet.Length);
 			}
-			catch (IOException) {
+			catch (Exception) {
 				_Client.Close();
 				if (_Player.Spawned) {
 					_Player.Despawn();
 				} else {
-					Spacecraft.Log("Anonymous connection thread stopped.");
+					if (_Running) Spacecraft.Log("Anonymous connection thread stopped (error).");
 				}
 				_Running = false;
 			}
@@ -230,9 +224,12 @@ namespace SpacecraftGT
 			
 			for (int i = 0; i < structure.Length; ++i) {
 				switch (structure[i]) {
-					case 'b':		// byte(1)
+					case 'b':		// sbyte(1)
 						if ((bufPos + 1) > _Buffer.Length) return nPair;
-						data.Append((byte) _Buffer[bufPos]);
+						if (i == 0)
+							data.Append((byte) _Buffer[bufPos]);
+						else
+							data.Append((sbyte) _Buffer[bufPos]);
 						bufPos += 1;
 						break;
 					
@@ -290,7 +287,7 @@ namespace SpacecraftGT
 		
 		public void SendChunk(Chunk chunk)
 		{
-			Transmit(PacketType.PreChunk, chunk.ChunkX, chunk.ChunkZ, (byte) 1);
+			Transmit(PacketType.PreChunk, chunk.ChunkX, chunk.ChunkZ, (sbyte) 1);
 			
 			byte[] uncompressed = chunk.GetBytes();
 			MemoryStream mem = new MemoryStream();
@@ -300,7 +297,7 @@ namespace SpacecraftGT
 			byte[] data = mem.ToArray();
 			
 			Transmit(PacketType.MapChunk, 16 * chunk.ChunkX, (short) 0, 16 * chunk.ChunkZ,
-				(byte) 15, (byte) 127, (byte) 15, data.Length, data);
+				(sbyte) 15, (sbyte) 127, (sbyte) 15, data.Length, data);
 		}
 		
 		#endregion
@@ -332,7 +329,7 @@ namespace SpacecraftGT
 					
 					Transmit(PacketType.LoginDetails, _Player.EntityID,
 						Spacecraft.Server.Name, Spacecraft.Server.Motd,
-						/* World.Seed */ (long) 0, /* World.Dimension */ (byte) 0);
+						/* World.Seed */ (long) 0, /* World.Dimension */ (sbyte) 0);
 					_Player.Spawn();
 					
 					break;
@@ -365,6 +362,9 @@ namespace SpacecraftGT
 				}
 				case PacketType.PlayerLook: {
 					// TODO: Handle PlayerLook
+					float yaw = (float) packet[1], pitch = (float) packet[2];
+					_Player.Yaw = (sbyte) (yaw * 256 / 360);
+					_Player.Pitch = (sbyte) (pitch * 256 / 360);
 					break;
 				}
 				case PacketType.PlayerPositionLook: {
@@ -373,6 +373,9 @@ namespace SpacecraftGT
 					_Player.Y = (double) packet[2];
 					//
 					_Player.Z = (double) packet[4];
+					float yaw = (float) packet[5], pitch = (float) packet[6];
+					_Player.Yaw = (sbyte) (yaw * 256 / 360);
+					_Player.Pitch = (sbyte) (pitch * 256 / 360);
 					break;
 				}
 				

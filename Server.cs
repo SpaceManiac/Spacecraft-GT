@@ -47,9 +47,6 @@ namespace SpacecraftGT
 			Spacecraft.Log("Listening on port " + Port);
 			Running = true;
 			
-			Chunk c = World.GetChunk(0, 0);
-			Spacecraft.Log("Block at 0, 96, 0: " + c.GetBlock(0, 96, 0));
-			
 			while (Running) {
 				// Check for new connections
 				while (_Listener.Pending()) {
@@ -62,6 +59,25 @@ namespace SpacecraftGT
 			}
 			
 			World.ForceSave();
+		}
+		
+		public void Spawn(Player player)
+		{
+			Spacecraft.Log(player.Username + " has joined");
+			MessageAll(Color.Announce + player.Username + " has joined");
+		}
+		
+		public void Despawn(Player player)
+		{
+			MessageAll(Color.Announce + player.Username + " has left");
+			Spacecraft.Log(player.Username + " has left");
+		}
+		
+		public void MessageAll(string message)
+		{
+			foreach(Player p in PlayerList) {
+				p.SendMessage(message);
+			}
 		}
 		
 		// ====================

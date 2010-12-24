@@ -7,6 +7,7 @@ using System.Text;
 using System.IO.Compression;
 using System.IO;
 using zlib;
+using System.Diagnostics;
 
 namespace SpacecraftGT
 {
@@ -26,14 +27,14 @@ namespace SpacecraftGT
 			_Client = client;
 			IPString = _Client.Client.RemoteEndPoint.ToString();
 			
+			_Running = true;
+			_TransmitQueue = new Queue<byte[]>();
+			_Buffer = new byte[0];
+			_Player = player;
+			
 			_Thread = new Thread(ConnectionThread);
 			_Thread.Name = "SC-Player " + _Client.GetHashCode();
 			_Thread.Start();
-			
-			_TransmitQueue = new Queue<byte[]>();
-			_Running = true;
-			_Buffer = new byte[0];
-			_Player = player;
 		}
 		
 		public void Stop()
@@ -45,11 +46,12 @@ namespace SpacecraftGT
         {
             _TransmitQueue.Enqueue(Obj.Save());
         }
-
+	
+		#region Network code
 		public void Transmit(PacketType type, params object[] args)
 		{
-			Spacecraft.Log("Transmitting: " + type + "(" + (byte)type + ")");
-			string structure = (type == PacketType.Disconnect ? "bs" : PacketStructure.Data[(byte) type]);
+			// Spacecraft.Log("Transmitting: " + type + "(" + (byte)type + ")");
+			string structure = (type == PacketType.Disconnect ? "bt" : PacketStructure.Data[(byte) type]);
 			
 			Builder<Byte> packet = new Builder<Byte>();
 			packet.Append((byte) type);
@@ -70,10 +72,10 @@ namespace SpacecraftGT
 							
 						case 'f':		// float(4)
 							bytes = BitConverter.GetBytes((float) args[i-1]);
-							//for (int j = 3; j >= 0; --j) {
-							//	packet.Append(bytes[j]);
-							//}
-							packet.Append(bytes);
+							for (int j = 3; j >= 0; --j) {
+								packet.Append(bytes[j]);
+							}
+							//packet.Append(bytes);
 							break;
 							
 						case 'i':		// int(4)
@@ -82,10 +84,10 @@ namespace SpacecraftGT
 							
 						case 'd':		// double(8)
 							bytes = BitConverter.GetBytes((double) args[i-1]);
-							//for (int j = 7; j >= 0; --j) {
-							//	packet.Append(bytes[j]);
-							//}
-							packet.Append(bytes);
+							for (int j = 7; j >= 0; --j) {
+								packet.Append(bytes[j]);
+							}
+							//packet.Append(bytes);
 							break;
 							
 						case 'l':		// long(8)
@@ -105,7 +107,8 @@ namespace SpacecraftGT
 				}
 			}
 			catch (InvalidCastException) {
-				Spacecraft.Log("Invalid cast in Transmit " + type + ", argument " + current);
+				Spacecraft.Log("Error transmitting " + type + ": expected '" + structure[current] +
+					"', got " + args[current - 1].GetType().ToString() + " for argument " + current + " (format: " + structure + ")");
 				throw;
 			}
 			_TransmitQueue.Enqueue(packet.ToArray());
@@ -114,16 +117,26 @@ namespace SpacecraftGT
 		private void ConnectionThread()
 		{
 			Spacecraft.Log("Connection thread " + _Client.GetHashCode() + " running.");
+			
+			Stopwatch clock = new Stopwatch();
+			clock.Start();
+			double lastKeepAlive = 0;
+			double lastUpdateChunks = 0;
+			
 			while (_Running) {
 				while (_TransmitQueue.Count > 0) {
-					TransmitRaw(_TransmitQueue.Dequeue());
+					byte[] next = _TransmitQueue.Dequeue();
+					TransmitRaw(next);
+					if (next[0] == (byte) PacketType.Disconnect) {
+						_Client.GetStream().Flush();
+						_Client.Close();
+					}
 				}
 				
-				if (!_Client.Client.Connected) {
-					// Never reaches here
+				if (!_Client.Connected) {
 					_Client.Close();
 					if (_Player.Spawned) {
-						Spacecraft.Log(_Player.Username + " has left");
+						_Player.Despawn();
 					} else {
 						Spacecraft.Log("Anonymous connection thread stopped.");
 					}
@@ -135,20 +148,39 @@ namespace SpacecraftGT
 					IncomingData();
 				}
 				
+				if (lastKeepAlive + 10 < clock.Elapsed.TotalSeconds) {
+					Transmit(PacketType.KeepAlive);
+					lastKeepAlive = clock.Elapsed.TotalSeconds;
+				}
+				
+				if (lastUpdateChunks + 2 < clock.Elapsed.TotalSeconds) {
+					_Player.Update();
+					lastUpdateChunks = clock.Elapsed.TotalSeconds;
+				}
+				
 				Thread.Sleep(10);
 			}
 		}
 		
 		private void TransmitRaw(byte[] packet)
 		{
-			_Client.GetStream().Write(packet, 0, packet.Length);
+			try {
+				_Client.GetStream().Write(packet, 0, packet.Length);
+			}
+			catch (IOException) {
+				_Client.Close();
+				if (_Player.Spawned) {
+					_Player.Despawn();
+				} else {
+					Spacecraft.Log("Anonymous connection thread stopped.");
+				}
+				_Running = false;
+			}
 		}
 		
 		public void Disconnect(string message)
 		{
 			Transmit(PacketType.Disconnect, message);
-			_Client.GetStream().Flush();
-			_Client.Close();
 		}
 		
 		private void IncomingData()
@@ -184,12 +216,21 @@ namespace SpacecraftGT
 		
 		private Pair<int, object[]> CheckCompletePacket()
 		{
-			PacketType type = (PacketType) _Buffer[0];
-			string structure = (type == PacketType.Disconnect ? "bs" : PacketStructure.Data[_Buffer[0]]);
-			int bufPos = 0;
-			
 			Pair<int, object[]> nPair = new Pair<int, object[]>(0, null);
+			
+			PacketType type = (PacketType) _Buffer[0];
+			if (type == PacketType.PlayerInventory) {
+				Spacecraft.Log("Someone sent an inventory! :V");
+			}
+			if (_Buffer[0] >= PacketStructure.Data.Length && _Buffer[0] != 0xFF) {
+				Spacecraft.Log("Got invalid packet: " + _Buffer[0]);
+				return nPair;
+			} 
+			
+			string structure = (type == PacketType.Disconnect ? "bt" : PacketStructure.Data[_Buffer[0]]);
+			int bufPos = 0;
 			Builder<object> data = new Builder<object>();
+			byte[] bytes = new byte[8];
 			
 			for (int i = 0; i < structure.Length; ++i) {
 				switch (structure[i]) {
@@ -207,7 +248,10 @@ namespace SpacecraftGT
 					
 					case 'f':		// float(4)
 						if ((bufPos + 4) > _Buffer.Length) return nPair;
-						data.Append((float) BitConverter.ToSingle(_Buffer, bufPos));
+						for (int j = 0; j < 4; ++j) {
+							bytes[i] = _Buffer[bufPos + 3 - j];
+						}
+						data.Append((float) BitConverter.ToSingle(bytes, 0));
 						bufPos += 4;
 						break;
 					case 'i':		// int(4)
@@ -218,7 +262,10 @@ namespace SpacecraftGT
 					
 					case 'd':		// double(8)
 						if ((bufPos + 8) > _Buffer.Length) return nPair;
-						data.Append((double) BitConverter.ToDouble(_Buffer, bufPos));
+						for (int j = 0; j < 8; ++j) {
+							bytes[j] = _Buffer[bufPos + 7 - j];
+						}
+						data.Append((double) BitConverter.ToDouble(bytes, 0));
 						bufPos += 8;
 						break;
 					case 'l':		// long(8)
@@ -260,11 +307,13 @@ namespace SpacecraftGT
 				(byte) 15, (byte) 127, (byte) 15, data.Length, data);
 		}
 		
+		#endregion
+		
 		private void ProcessPacket(object[] packet)
 		{
 			PacketType type = (PacketType) (byte) packet[0];
 			
-			//Spacecraft.Log("Packet received: " + type);
+			// Spacecraft.Log("Packet received: " + type);
 			
 			switch(type) {
 				case PacketType.Handshake: {
@@ -274,10 +323,13 @@ namespace SpacecraftGT
 				}
 				case PacketType.LoginDetails: {
 					if ((int) packet[1] != Spacecraft.ProtocolVersion) {
+						Spacecraft.Log("Expecting protocol v" + Spacecraft.ProtocolVersion + ", got v" + (int) packet[1]);
 						Disconnect("Invalid protocol version");
+						break;
 					}
 					if ((string) packet[2] != _Player.Username) {
 						Disconnect("Sent invalid username");
+						break;
 					}
 					
 					// TODO: Implement name verification
@@ -287,6 +339,49 @@ namespace SpacecraftGT
 						/* World.Seed */ (long) 0, /* World.Dimension */ (byte) 0);
 					_Player.Spawn();
 					
+					break;
+				}
+				
+				case PacketType.Message: {
+					_Player.RecvMessage((string) packet[1]);
+					break;
+				}
+				case PacketType.InteractEntity: {
+					// TODO: Handle InteractEntity
+					break;
+				}
+				case PacketType.Respawn: {
+					// TODO: Handle Respawn
+					break;
+				}
+				
+				case PacketType.Player: {
+					// Ignore.
+					break;
+				}
+				case PacketType.PlayerPosition: {
+					_Player.X = (double) packet[1];
+					_Player.Y = (double) packet[2];
+					//
+					_Player.Z = (double) packet[4];
+					//
+					break;
+				}
+				case PacketType.PlayerLook: {
+					// TODO: Handle PlayerLook
+					break;
+				}
+				case PacketType.PlayerPositionLook: {
+					// TODO: Handle PlayerPositionLook
+					_Player.X = (double) packet[1];
+					_Player.Y = (double) packet[2];
+					//
+					_Player.Z = (double) packet[4];
+					break;
+				}
+				
+				case PacketType.Disconnect: {
+					Disconnect("Quitting");
 					break;
 				}
 			}

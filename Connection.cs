@@ -41,11 +41,6 @@ namespace SpacecraftGT
 		{
 			_Running = false;
 		}
-
-        public void Transmit(Packet Obj)
-        {
-            _TransmitQueue.Enqueue(Obj.Save());
-        }
 		
 		#region Network code
 

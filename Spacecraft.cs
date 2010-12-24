@@ -10,16 +10,14 @@ namespace SpacecraftGT
 	{
 		public const int ProtocolVersion = 8;
 		
-		// private static StreamWriter _Log;
 		public static Random Random;
 		public static Server Server;
 		
 		public static void Main(string[] args)
 		{
-			// _Log = null;
 			Log("Spacecraft is starting...");
 			
-			//Configuration.Load();
+			Configuration.Load();
 			
 			if (Configuration.Defined("random-seed")) {
 				Random = new Random(Configuration.GetInt("random-seed", 0));
@@ -40,9 +38,7 @@ namespace SpacecraftGT
 		
 		public static void Log(string message)
 		{
-			// lock(_Log) {
-				Console.WriteLine(FormatTime() + "    " + message);
-			// }
+			Console.WriteLine(FormatTime() + "    " + message);
 		}
 		
 		public static string FormatTime()

@@ -9,9 +9,8 @@ namespace SpacecraftGT
 		private static Dictionary<string, string> _Config;
 		private const string _CONFIG_FILENAME = "configuration.txt";
 
-		static Configuration()
+		public static void Load()
 		{
-
 			_Config = new Dictionary<string, string>();
 
 			if (!File.Exists(_CONFIG_FILENAME)) {

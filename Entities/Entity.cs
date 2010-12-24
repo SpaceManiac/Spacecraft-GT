@@ -22,6 +22,7 @@ namespace SpacecraftGT
 		{
 			CurrentChunk = null;
 			EntityID = Spacecraft.Random.Next();
+			CurrentChunk = null;
 		}
 		
 		virtual public void Update()

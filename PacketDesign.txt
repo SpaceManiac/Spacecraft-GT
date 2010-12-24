@@ -1,0 +1,88 @@
+Keep Alive (0x00)
+
+Login Request (0x01)
+	Protocol Version	int
+	Username	string
+	Password	string
+	Map Seed	long
+	Dimension	byte
+
+Handshake (0x02)
+	Username	string
+
+Chat Message (0x03)
+	Message	string
+
+Player Inventory (0x05)
+	Type	int
+	Count	short
+	Payload	byte[]
+
+Use Entity (0x07)
+	User	int
+	Target	int
+	Punching	bool
+
+Respawn (0x09)
+	Unknown	byte
+
+Player (0x0A)
+	OnGround	bool
+
+Player Position (0x0B)
+	X	double
+	Y	double
+	Stance	double
+	Z	double
+	OnGround	bool
+
+Player Look (0x0C)
+	Yaw	float
+	Pitch	float
+	On Ground	bool
+
+Player Position Look (0x0D)
+	X	double
+	Y	double
+	Stance	double
+	Z	double
+	Yaw	float
+	Pitch	float
+	On Ground	bool
+
+Player Digging (0x0E)
+	Status	byte
+	X	int
+	Y	byte
+	Z	int
+	Face	byte
+
+Player Block Placement (0x0F)
+	BlockItemID	short
+	X	int
+	Y	byte
+	Z	int
+	Direction	byte
+
+Holding Change (0x10)
+	Unused 	int 
+	BlockItemID 	short 
+
+Arm Animation (0x12)
+	EID 	int 
+	Animate	bool 
+
+Pickup Spawn (0x15)
+	EID 	int 
+	Item 	short 
+	Count 	byte 
+	X 	int 
+	Y 	int 
+	Z 	int 
+	Rotation 	byte 
+	Pitch 	byte 
+	Roll 	byte 
+
+Disconnect (0xFF)
+	Reason	string
+>>>>>>> d743f22fb0f8ec701c0f3f5fca4ccce24bf2669c

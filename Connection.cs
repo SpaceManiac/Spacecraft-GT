@@ -122,7 +122,7 @@ namespace SpacecraftGT
 				while (_TransmitQueue.Count > 0) {
 					byte[] next = _TransmitQueue.Dequeue();
 					TransmitRaw(next);
-					if (next[0] == (byte) PacketType.Disconnect) {
+					if (next.Length > 0 && next[0] == (byte) PacketType.Disconnect) {
 						_Client.GetStream().Flush();
 						_Client.Close();
 					}
@@ -209,9 +209,6 @@ namespace SpacecraftGT
 			Pair<int, object[]> nPair = new Pair<int, object[]>(0, null);
 			
 			PacketType type = (PacketType) _Buffer[0];
-			if (type == PacketType.PlayerInventory) {
-				Spacecraft.Log("Someone sent an inventory! :V");
-			}
 			if (_Buffer[0] >= PacketStructure.Data.Length && _Buffer[0] != 0xFF) {
 				Spacecraft.Log("Got invalid packet: " + _Buffer[0]);
 				return nPair;
@@ -315,9 +312,14 @@ namespace SpacecraftGT
 					break;
 				}
 				case PacketType.LoginDetails: {
-					if ((int) packet[1] != Spacecraft.ProtocolVersion) {
+					int protocol = (int) packet[1];
+					if (protocol != Spacecraft.ProtocolVersion) {
 						Spacecraft.Log("Expecting protocol v" + Spacecraft.ProtocolVersion + ", got v" + (int) packet[1]);
-						Disconnect("Invalid protocol version");
+						if (protocol > Spacecraft.ProtocolVersion) {
+							Disconnect("Outdated server!");
+						} else {
+							Disconnect("Outdated client!");
+						}
 						break;
 					}
 					if ((string) packet[2] != _Player.Username) {
@@ -381,6 +383,11 @@ namespace SpacecraftGT
 				
 				case PacketType.Disconnect: {
 					Disconnect("Quitting");
+					break;
+				}
+				
+				default: {
+					Spacecraft.Log("[Packet] " + _Player.Username + " sent " + type);
 					break;
 				}
 			}

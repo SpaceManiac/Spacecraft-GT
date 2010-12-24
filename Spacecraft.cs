@@ -7,7 +7,7 @@ namespace SpacecraftGT
 {
 	public static class Spacecraft
 	{
-		public const int ProtocolVersion = 6;
+		public const int ProtocolVersion = 8;
 		
 		// private static StreamWriter _Log;
 		public static Random Random;

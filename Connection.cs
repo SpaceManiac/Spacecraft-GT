@@ -1,17 +1,14 @@
 using System;
-using System.Net.Sockets;
-using System.Threading;
 using System.Collections.Generic;
-using System.Net;
-using System.Text;
-using System.IO.Compression;
-using System.IO;
-using zlib;
 using System.Diagnostics;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
 
 namespace SpacecraftGT
 {
-	public class Connection
+	public partial class Connection
 	{
 		public string IPString;
 		
@@ -42,9 +39,8 @@ namespace SpacecraftGT
 			_Running = false;
 		}
 		
-		#region Network code
 
-		public void Transmit(PacketType type, params object[] args)
+		private void Transmit(PacketType type, params object[] args)
 		{
 			// Spacecraft.Log("Transmitting: " + type + "(" + (byte)type + ")");
 			string structure = (type == PacketType.Disconnect ? "bt" : PacketStructure.Data[(byte) type]);
@@ -169,10 +165,7 @@ namespace SpacecraftGT
 			}
 		}
 		
-		public void Disconnect(string message)
-		{
-			Transmit(PacketType.Disconnect, message);
-		}
+		
 		
 		private void IncomingData()
 		{
@@ -283,22 +276,7 @@ namespace SpacecraftGT
 			return new Pair<int, object[]>(bufPos, data.ToArray());
 		}
 		
-		public void SendChunk(Chunk chunk)
-		{
-			Transmit(PacketType.PreChunk, chunk.ChunkX, chunk.ChunkZ, (sbyte) 1);
-			
-			byte[] uncompressed = chunk.GetBytes();
-			MemoryStream mem = new MemoryStream();
-			ZOutputStream stream = new ZOutputStream(mem, zlibConst.Z_BEST_COMPRESSION);
-			stream.Write(uncompressed, 0, uncompressed.Length);
-			stream.Close();
-			byte[] data = mem.ToArray();
-			
-			Transmit(PacketType.MapChunk, 16 * chunk.ChunkX, (short) 0, 16 * chunk.ChunkZ,
-				(sbyte) 15, (sbyte) 127, (sbyte) 15, data.Length, data);
-		}
 		
-		#endregion
 		
 		private void ProcessPacket(object[] packet)
 		{

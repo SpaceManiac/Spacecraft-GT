@@ -85,4 +85,3 @@ Pickup Spawn (0x15)
 
 Disconnect (0xFF)
 	Reason	string
->>>>>>> d743f22fb0f8ec701c0f3f5fca4ccce24bf2669c

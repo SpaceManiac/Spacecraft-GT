@@ -119,36 +119,41 @@ namespace SpacecraftGT
 			double lastKeepAlive = 0;
 			
 			while (_Running) {
-				while (_TransmitQueue.Count > 0) {
-					byte[] next = _TransmitQueue.Dequeue();
-					TransmitRaw(next);
-					if (next.Length > 0 && next[0] == (byte) PacketType.Disconnect) {
-						_Client.GetStream().Flush();
+				try {
+					while (_TransmitQueue.Count > 0) {
+						byte[] next = _TransmitQueue.Dequeue();
+						TransmitRaw(next);
+						if (next.Length > 0 && next[0] == (byte) PacketType.Disconnect) {
+							_Client.GetStream().Flush();
+							_Client.Close();
+						}
+					}
+					
+					if (!_Client.Connected) {
 						_Client.Close();
+						_Running = false;
+						break;
 					}
+					
+					if (_Client.GetStream().DataAvailable) {
+						IncomingData();
+					}
+					
+					if (lastKeepAlive + 20 < clock.Elapsed.TotalSeconds) {
+						Transmit(PacketType.KeepAlive);
+						lastKeepAlive = clock.Elapsed.TotalSeconds;
+					}
+					
+					Thread.Sleep(30);
 				}
-				
-				if (!_Client.Connected) {
-					_Client.Close();
-					if (_Player.Spawned) {
-						_Player.Despawn();
-					} else {
-						Spacecraft.Log("Anonymous connection thread stopped.");
-					}
+				catch (Exception) {
 					_Running = false;
-					break;
 				}
-				
-				if (_Client.GetStream().DataAvailable) {
-					IncomingData();
-				}
-				
-				if (lastKeepAlive + 20 < clock.Elapsed.TotalSeconds) {
-					Transmit(PacketType.KeepAlive);
-					lastKeepAlive = clock.Elapsed.TotalSeconds;
-				}
-				
-				Thread.Sleep(30);
+			}
+			if (_Player.Spawned) {
+				_Player.Despawn();
+			} else {
+				Spacecraft.Log("Anonymous connection thread stopped.");
 			}
 		}
 		
@@ -159,11 +164,7 @@ namespace SpacecraftGT
 			}
 			catch (Exception) {
 				_Client.Close();
-				if (_Player.Spawned) {
-					_Player.Despawn();
-				} else {
-					if (_Running) Spacecraft.Log("Anonymous connection thread stopped (error).");
-				}
+				Spacecraft.Log("Disconnected on exception");
 				_Running = false;
 			}
 		}
@@ -239,7 +240,7 @@ namespace SpacecraftGT
 					case 'f':		// float(4)
 						if ((bufPos + 4) > _Buffer.Length) return nPair;
 						for (int j = 0; j < 4; ++j) {
-							bytes[i] = _Buffer[bufPos + 3 - j];
+							bytes[j] = _Buffer[bufPos + 3 - j];
 						}
 						data.Append((float) BitConverter.ToSingle(bytes, 0));
 						bufPos += 4;
@@ -339,14 +340,6 @@ namespace SpacecraftGT
 				
 				case PacketType.Message: {
 					_Player.RecvMessage((string) packet[1]);
-					break;
-				}
-				case PacketType.InteractEntity: {
-					// TODO: Handle InteractEntity
-					break;
-				}
-				case PacketType.Respawn: {
-					// TODO: Handle Respawn
 					break;
 				}
 				

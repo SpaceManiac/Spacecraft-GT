@@ -41,7 +41,6 @@ namespace SpacecraftGT
 		{
 			if (!Spawned) return;
 			Spawned = false;
-			CurrentChunk = null;
 			Spacecraft.Server.Despawn(this);
 			base.Despawn();
 		}

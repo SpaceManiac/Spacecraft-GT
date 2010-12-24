@@ -36,18 +36,21 @@ namespace SpacecraftGT
 			
 			double dx = X - _LastX, dy = Y - _LastY, dz = Z - _LastZ;
 			bool rotchanged = (Yaw != _LastYaw || Pitch != _LastPitch);
+			_LastX = X; _LastY = Y; _LastZ = Z;
+			_LastYaw = Yaw; _LastPitch = Pitch;
 			if (dx != 0 || dy != 0 || dz != 0 || rotchanged) {
 				foreach (Player p in Spacecraft.Server.PlayerList) {
 					if (p != this && p.VisibleEntities.Contains(this)) p.UpdateEntity(this, dx, dy, dz, rotchanged, false);
 				}
 			}
-			_LastX = X; _LastY = Y; _LastZ = Z;
-			_LastYaw = Yaw; _LastPitch = Pitch;
 		}
 		
 		virtual public void Despawn()
 		{
-			if (CurrentChunk != null) CurrentChunk.Entities.Remove(this);
+			if (CurrentChunk != null) {
+				CurrentChunk.Entities.Remove(this);
+				CurrentChunk = null;
+			}
 		}
 		
 		override public string ToString()

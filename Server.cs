@@ -63,7 +63,7 @@ namespace SpacecraftGT
 				
 				if (lastUpdate + 1 < clock.Elapsed.TotalSeconds) {
 					foreach (Player p in PlayerList) {
-						p.Update();
+						if (p.Spawned) p.Update();
 					}
 				}	
 				

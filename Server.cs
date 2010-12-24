@@ -3,6 +3,7 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System.Diagnostics;
 
 namespace SpacecraftGT
 {
@@ -36,7 +37,9 @@ namespace SpacecraftGT
 		
 		public void Run()
 		{
+			
 			World = new Map(WorldName);
+			World.Time = 0;
 			if (!File.Exists(WorldName + "/level.dat")) {
 				Spacecraft.Log("Generating world " + WorldName);
 				World.Generate();
@@ -47,8 +50,9 @@ namespace SpacecraftGT
 			Spacecraft.Log("Listening on port " + Port);
 			Running = true;
 			
-			Chunk c = World.GetChunk(0, 0);
-			Spacecraft.Log("Block at 0, 96, 0: " + c.GetBlock(0, 96, 0));
+			Stopwatch clock = new Stopwatch();
+			clock.Start();
+			double lastUpdate = 0;
 			
 			while (Running) {
 				// Check for new connections
@@ -57,11 +61,36 @@ namespace SpacecraftGT
 					//Running = false;
 				}
 				
+				if (lastUpdate + 1 < clock.Elapsed.TotalSeconds) {
+					foreach (Player p in PlayerList) {
+						p.Update();
+					}
+				}	
+				
 				// Rest
-				Thread.Sleep(10);
+				Thread.Sleep(30);
 			}
 			
 			World.ForceSave();
+		}
+		
+		public void Spawn(Player player)
+		{
+			Spacecraft.Log(player.Username + " has joined");
+			MessageAll(Color.Announce + player.Username + " has joined");
+		}
+		
+		public void Despawn(Player player)
+		{
+			MessageAll(Color.Announce + player.Username + " has left");
+			Spacecraft.Log(player.Username + " has left");
+		}
+		
+		public void MessageAll(string message)
+		{
+			foreach(Player p in PlayerList) {
+				p.SendMessage(message);
+			}
 		}
 		
 		// ====================

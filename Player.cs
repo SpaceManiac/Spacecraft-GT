@@ -10,7 +10,6 @@ namespace SpacecraftGT
 		public string Username;
 		public bool Spawned;
 		
-		public Chunk CurrentChunk;
 		public List<Chunk> VisibleChunks;
 		public List<Entity> VisibleEntities;
 		
@@ -26,64 +25,134 @@ namespace SpacecraftGT
 		
 		public void Spawn()
 		{
-			Spacecraft.Log(Username + " has joined!");
-			//Spacecraft.Server.Spawn(this);
+			Spacecraft.Server.Spawn(this);
 			Spawned = true;
-			CurrentChunk = Spacecraft.Server.World.GetChunk(0, 0);
-			X = Z = 0;
-			Y = 96;
-			UpdateChunks();
+			CurrentChunk = null;
+			X = Spacecraft.Server.World.SpawnX + 0.5;
+			Y = Spacecraft.Server.World.SpawnY + 5;
+			Z = Spacecraft.Server.World.SpawnZ + 0.5;
+			Update();
 			_Conn.Transmit(PacketType.SpawnPosition, (int)X, (int)Y, (int)Z);
-			// _Conn.Transmit(PacketType.PlayerPositionLook, X, Y, Y, Z, (float) 0, (float) 0, (byte) 1);
-			_Conn.Transmit(PacketType.NamedEntitySpawn, EntityID, "Player", (int)X, (int)Y, (int)Z, (byte)0, (byte)0, (short)0);
+			_Conn.Transmit(PacketType.PlayerPositionLook, X, Y, Y, Z, (float) 0, (float) 0, (sbyte) 1);
+			// _Conn.Transmit(PacketType.NamedEntitySpawn, EntityID, "Player", (int)X, (int)Y, (int)Z, (byte)0, (byte)0, (short)0);
 		}
 		
-		public void UpdateChunks()
+		override public void Despawn()
 		{
-			Chunk NewChunk = Spacecraft.Server.World.GetChunkAt((int)X, (int)Z);
-			if (NewChunk != CurrentChunk) {
-				List<Chunk> RemoveChunk = new List<Chunk>();
-				List<Chunk> AddChunk = new List<Chunk>();
-				foreach (Chunk c in Spacecraft.Server.World.GetChunksInRange(CurrentChunk)) {
-					RemoveChunk.Add(c);
+			if (!Spawned) return;
+			Spawned = false;
+			CurrentChunk = null;
+			Spacecraft.Server.Despawn(this);
+			base.Despawn();
+		}
+		
+		public void SendMessage(string message)
+		{
+			_Conn.Transmit(PacketType.Message, message);
+		}
+		
+		public void RecvMessage(string message)
+		{
+			Spacecraft.Log("<" + Username + "> " + message);
+			Spacecraft.Server.MessageAll("<" + Username + "> " + message);
+		}
+		
+		public override void Update()
+		{
+			if (!Spawned) return;
+			Chunk newChunk = Spacecraft.Server.World.GetChunkAt((int)X, (int)Z);
+			
+			if (newChunk != CurrentChunk) {
+				List<Chunk> newVisibleChunks = new List<Chunk>();
+				
+				foreach (Chunk c in Spacecraft.Server.World.GetChunksInRange(newChunk)) {
+					newVisibleChunks.Add(c);
 				}
-				foreach (Chunk c in Spacecraft.Server.World.GetChunksInRange(NewChunk)) {
-					if (RemoveChunk.Contains(c)) {
-						RemoveChunk.Remove(c);
-					} else {
-						AddChunk.Add(c);
+				foreach (Chunk c in VisibleChunks) {
+					if (!newVisibleChunks.Contains(c)) {
+						_Conn.Transmit(PacketType.PreChunk, c.ChunkX, c.ChunkZ, (sbyte) 0);
+					}
+				}
+				foreach (Chunk c in newVisibleChunks) {
+					if (!VisibleChunks.Contains(c)) {
+						_Conn.SendChunk(c);
 					}
 				}
 				
-				foreach (Chunk c in RemoveChunk) {
-					_Conn.Transmit(PacketType.PreChunk, c.ChunkX, c.ChunkZ, (byte) 0);
-					foreach (Entity e in Spacecraft.Server.World.EntitiesIn(c)) {
-						DespawnEntity(e);
-					}
-					VisibleChunks.Remove(c);
+				VisibleChunks = newVisibleChunks;
+			}
+			
+			List<Entity> newVisibleEntities = new List<Entity>();
+			foreach (Chunk c in VisibleChunks) {
+				foreach (Entity e in c.Entities) {
+					newVisibleEntities.Add(e);
 				}
-				foreach (Chunk c in AddChunk) {
-					_Conn.SendChunk(c);
-					foreach (Entity e in Spacecraft.Server.World.EntitiesIn(c)) {
-						SpawnEntity(e);
-					}
-					VisibleChunks.Add(c);
+			}
+			foreach (Entity e in VisibleEntities) {
+				if (!newVisibleEntities.Contains(e)) {
+					DespawnEntity(e);
 				}
-				
-				CurrentChunk = NewChunk;
-			}	
+			}
+			foreach (Entity e in newVisibleEntities) {
+				if (!VisibleEntities.Contains(e)) {
+					SpawnEntity(e);
+				}
+			}
+			VisibleEntities = newVisibleEntities;
+			
+			_Conn.Transmit(PacketType.TimeUpdate, Spacecraft.Server.World.Time);
+			base.Update();
 		}
 		
-		public void DespawnEntity(Entity e)
+		public void UpdateEntity(Entity e, double dx, double dy, double dz, bool rotchanged, bool forceabs)
 		{
+			if (!Spawned) return;
+			if (dx == 0 && dy == 0 && dz == 0) {
+				if (rotchanged) {
+					_Conn.Transmit(PacketType.EntityLook, e.EntityID, (sbyte) e.Yaw, (sbyte) e.Pitch);
+				}
+			} else if (Math.Abs(dx) < 4 && Math.Abs(dy) < 4 && Math.Abs(dz) < 4 && !forceabs) {
+				if (rotchanged) {
+					_Conn.Transmit(PacketType.EntityLookAndMove, e.EntityID,
+						(sbyte) (dx * 32), (sbyte) (dy * 32), (sbyte) (dz * 32),
+						(sbyte) e.Yaw, (sbyte) e.Pitch);
+				} else {
+					_Conn.Transmit(PacketType.EntityRelativeMove, e.EntityID,
+						(sbyte) (dx * 32), (sbyte) (dy * 32), (sbyte) (dz * 32));
+				}
+			} else {
+				_Conn.Transmit(PacketType.EntityTeleport, e.EntityID,
+					(int) (e.X * 32), (int) (e.Y * 32), (int) (e.Z * 32),
+					(sbyte) e.Yaw, (sbyte) e.Pitch);
+			}
+		}
+		
+		private void DespawnEntity(Entity e)
+		{
+			if (!Spawned || e == this) return;
 			_Conn.Transmit(PacketType.DestroyEntity, e.EntityID);
-			VisibleEntities.Remove(e);
 		}
 		
-		public void SpawnEntity(Entity e)
+		private void SpawnEntity(Entity e)
 		{
-			// TODO.
-			VisibleEntities.Add(e);
+			if (!Spawned || e == this) return;
+			
+			if (e is Player) {
+				Player p = (Player) e;
+				_Conn.Transmit(PacketType.NamedEntitySpawn, p.EntityID,
+					p.Username, (int)(p.X * 32), (int)(p.Y * 32), (int)(p.Z * 32),
+					(sbyte)0, (sbyte)0, (short) Block.TNT);
+			} else {
+				SendMessage(Color.Purple + "Spawning " + e);
+				return;
+			}
+			_Conn.Transmit(PacketType.Entity, e.EntityID);
 		}
+		
+		override public string ToString()
+		{
+			return "[Entity.Player " + EntityID + ": " + Username + "]";
+		}
+		
 	}
 }

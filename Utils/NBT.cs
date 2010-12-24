@@ -42,6 +42,13 @@ namespace NBT
 			this.Payload = payload;
 		}
 
+		public BinaryTag(TagType T, object payload, string name)
+		{
+			this.Type = T;
+			this.Name = name;
+			this.Payload = payload;
+		}
+
         public BinaryTag this[string Key]
         {
             get {

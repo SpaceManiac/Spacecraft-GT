@@ -107,7 +107,9 @@ namespace SpacecraftGT
 					"', got " + args[current - 1].GetType().ToString() + " for argument " + current + " (format: " + structure + ")");
 				throw;
 			}
-			_TransmitQueue.Enqueue(packet.ToArray());
+			lock (_TransmitQueue) {
+				_TransmitQueue.Enqueue(packet.ToArray());
+			}
 		}
 		
 		private void ConnectionThread()
@@ -121,7 +123,10 @@ namespace SpacecraftGT
 			while (_Running) {
 				try {
 					while (_TransmitQueue.Count > 0) {
-						byte[] next = _TransmitQueue.Dequeue();
+						byte[] next;
+						lock (_TransmitQueue) {
+							next = _TransmitQueue.Dequeue();
+						}
 						TransmitRaw(next);
 						if (next.Length > 0 && next[0] == (byte) PacketType.Disconnect) {
 							_Client.GetStream().Flush();

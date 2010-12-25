@@ -34,6 +34,7 @@ namespace SpacecraftGT
 			
 			for (int i = 0; i < 16348; ++i) {
 				blocks[i*2] = (byte) Block.Rock;
+				blocks[i*2 + 1] = (byte) Block.Rock;
 				skylight[i] = 0xFF;
 				light[i] = 0xFF;
 			}
@@ -95,6 +96,13 @@ namespace SpacecraftGT
 			builder.Append((byte[]) _Structure["Level"]["BlockLight"].Payload);
 			builder.Append((byte[]) _Structure["Level"]["SkyLight"].Payload);
 			return builder.ToArray();
+		}
+		
+		public Pair<int, int> GetChunkPos(int x, int z)
+		{
+			Spacecraft.Log(this + ".GetChunkPos(" + x + "," + z + "):");
+			//int newX = 
+			return new Pair<int, int>(0, 0);
 		}
 		
 		// ====================

@@ -65,7 +65,8 @@ namespace SpacecraftGT
 		
 		public Chunk GetChunkAt(int blockX, int blockZ)
 		{
-			return GetChunk((int)(blockX / 16) - (blockX < 0 ? 1 : 0), (int)(blockZ / 16) - (blockZ < 0 ? 1 : 0));
+			int xNeg = (blockX < 0 ? 1 : 0), zNeg = (blockZ < 0 ? 1 : 0);
+			return GetChunk((int)((blockX + xNeg) / 16) - xNeg, (int)((blockZ + zNeg) / 16) - zNeg);
 		}
 		
 		public List<Chunk> GetChunksInRange(Chunk c)

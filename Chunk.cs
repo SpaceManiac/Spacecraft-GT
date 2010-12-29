@@ -100,9 +100,7 @@ namespace SpacecraftGT
 		
 		public Pair<int, int> GetChunkPos(int x, int z)
 		{
-			Spacecraft.Log(this + ".GetChunkPos(" + x + "," + z + "):");
-			//int newX = 
-			return new Pair<int, int>(0, 0);
+			return new Pair<int, int>((x - 16*ChunkX) % 16, (z - 16*ChunkZ) % 16);
 		}
 		
 		// ====================

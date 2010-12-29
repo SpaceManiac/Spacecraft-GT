@@ -103,7 +103,7 @@ namespace SpacecraftGT
 				}
 			}
 			catch (InvalidCastException) {
-				Spacecraft.Log("Error transmitting " + type + ": expected '" + structure[current] +
+				Spacecraft.Log("[Error] Transmitting " + type + ": expected '" + structure[current] +
 					"', got " + args[current - 1].GetType().ToString() + " for argument " + current + " (format: " + structure + ")");
 				throw;
 			}
@@ -151,7 +151,12 @@ namespace SpacecraftGT
 					
 					Thread.Sleep(30);
 				}
-				catch (Exception) {
+				catch (Exception e) {
+					try {
+						DisconnectRaw("Server error: " + e.Message);
+					}
+					catch(Exception) {}
+					Spacecraft.LogError(e);
 					_Running = false;
 				}
 			}
@@ -177,6 +182,19 @@ namespace SpacecraftGT
 		public void Disconnect(string message)
 		{
 			Transmit(PacketType.Disconnect, message);
+		}
+		
+		public void DisconnectRaw(string message)
+		{
+			lock (_TransmitQueue) {
+				_TransmitQueue.Clear();
+			}
+			Transmit(PacketType.Disconnect, message);
+			lock (_TransmitQueue) {
+				TransmitRaw(_TransmitQueue.Dequeue());
+			}
+			_Client.GetStream().Flush();
+			_Client.Close();
 		}
 		
 		private void IncomingData()
@@ -361,17 +379,16 @@ namespace SpacecraftGT
 					break;
 				}
 				case PacketType.PlayerLook: {
-					// TODO: Handle PlayerLook
+					// TODO: Figure out this and PlayerPositionLook (see issue #1)
 					float yaw = (float) packet[1], pitch = (float) packet[2];
 					_Player.Yaw = (sbyte) (yaw * 256 / 360);
 					_Player.Pitch = (sbyte) (pitch * 256 / 360);
 					break;
 				}
 				case PacketType.PlayerPositionLook: {
-					// TODO: Handle PlayerPositionLook
 					_Player.X = (double) packet[1];
 					_Player.Y = (double) packet[2];
-					//
+					// TODO: Do something with stance maybe.
 					_Player.Z = (double) packet[4];
 					float yaw = (float) packet[5], pitch = (float) packet[6];
 					_Player.Yaw = (sbyte) (yaw * 256 / 360);
@@ -381,6 +398,35 @@ namespace SpacecraftGT
 				
 				case PacketType.Disconnect: {
 					Disconnect("Quitting");
+					break;
+				}
+				
+				case PacketType.PlayerDigging: {
+					sbyte status = (sbyte) packet[1];
+					int x = (int) packet[2];
+					sbyte y = (sbyte) packet[3];
+					int z = (int) packet[4];
+					sbyte face = (sbyte) packet[5];
+					if (status == 0) {
+						Chunk c = Spacecraft.Server.World.GetChunkAt(x, z);
+						Pair<int, int> pos = c.GetChunkPos(x, z);
+						c.SetBlock(pos.First, y, pos.Second, Block.Air);
+						Transmit(PacketType.BlockChange, x, y, z, Block.Air, (sbyte) 0);
+					}
+					break;
+				}
+				
+				case PacketType.PlayerBlockPlace: {
+					int x = (int) packet[1];
+					sbyte y = (sbyte) packet[2];
+					int z = (int) packet[3];
+					sbyte face = (sbyte) packet[3];
+					short block = (short) packet[4];
+					break;
+				}
+				
+				case PacketType.ArmAnimation: {
+					// TODO
 					break;
 				}
 				

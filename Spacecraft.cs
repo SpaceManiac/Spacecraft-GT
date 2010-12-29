@@ -39,6 +39,14 @@ namespace SpacecraftGT
 		public static void Log(string message)
 		{
 			Console.WriteLine(FormatTime() + "    " + message);
+			// TODO: Finish up logging.
+		}
+		
+		public static void LogError(Exception e)
+		{
+			Log("[Error] " + e.Message + " (see error.log for details)");
+			// TODO: Finish up logging.
+			Console.WriteLine(e.StackTrace);
 		}
 		
 		public static string FormatTime()
@@ -78,7 +86,6 @@ namespace SpacecraftGT
 			}
 			return sb.ToString();
 		}
-
 
 	}
 }

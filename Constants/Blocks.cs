@@ -26,6 +26,7 @@ namespace SpacecraftGT
 		Sponge = 19,
 		Glass = 20,
 
+		/* Colored cloths not available in Alpha
 		Red = 21,
 		Orange = 22,
 		Yellow = 23,
@@ -40,8 +41,8 @@ namespace SpacecraftGT
 		Magenta = 32,
 		Pink = 33,
 		Black = 34,
-		Gray = 35,
-		White = 36,
+		Gray = 35, */
+		WhiteCloth = 36,
 
 		YellowFlower = 37,
 		RedFlower = 38,

@@ -88,7 +88,7 @@ namespace SpacecraftGT
 			"bffb",				// player look
 			"bddddffb",			// player position+look
 			"bbibib",			// player digging
-			"bsibib",			// player block place
+			"bibibs",			// player block place
 			"bs",				// player holding
 			"",					// unused space
 			"bib",				// arm animation

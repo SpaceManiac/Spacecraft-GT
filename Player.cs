@@ -23,6 +23,8 @@ namespace SpacecraftGT
 			VisibleEntities = new List<Entity>();
 		}
 		
+		#region Entity Overrides
+		
 		public void Spawn()
 		{
 			Spacecraft.Server.Spawn(this);
@@ -43,17 +45,6 @@ namespace SpacecraftGT
 			Spawned = false;
 			Spacecraft.Server.Despawn(this);
 			base.Despawn();
-		}
-		
-		public void SendMessage(string message)
-		{
-			_Conn.Transmit(PacketType.Message, message);
-		}
-		
-		public void RecvMessage(string message)
-		{
-			Spacecraft.Log("<" + Username + "> " + message);
-			Spacecraft.Server.MessageAll("<" + Username + "> " + message);
 		}
 		
 		public override void Update()
@@ -103,6 +94,20 @@ namespace SpacecraftGT
 			base.Update();
 		}
 		
+		override public string ToString()
+		{
+			return "[Entity.Player " + EntityID + ": " + Username + "]";
+		}
+		
+		#endregion
+		
+		#region Connection Interface
+		
+		public void SendMessage(string message)
+		{
+			_Conn.Transmit(PacketType.Message, message);
+		}
+		
 		public void UpdateEntity(Entity e, double dx, double dy, double dz, bool rotchanged, bool forceabs)
 		{
 			if (!Spawned) return;
@@ -126,6 +131,21 @@ namespace SpacecraftGT
 			}
 		}
 		
+		public void BlockChanged(int x, int y, int z, Block block)
+		{
+			_Conn.Transmit(PacketType.BlockChange, x, (sbyte) y, z, (sbyte) block, (sbyte) 0);
+		}
+		
+		public void RecvMessage(string message)
+		{
+			Spacecraft.Log("<" + Username + "> " + message);
+			Spacecraft.Server.MessageAll("<" + Username + "> " + message);
+		}
+		
+		#endregion
+		
+		#region Helpers
+		
 		private void DespawnEntity(Entity e)
 		{
 			if (!Spawned || e == this) return;
@@ -140,7 +160,7 @@ namespace SpacecraftGT
 				Player p = (Player) e;
 				_Conn.Transmit(PacketType.NamedEntitySpawn, p.EntityID,
 					p.Username, (int)(p.X * 32), (int)(p.Y * 32), (int)(p.Z * 32),
-					(sbyte)0, (sbyte)0, (short) Block.TNT);
+					(sbyte)0, (sbyte)0, (short) Block.Brick);
 			} else {
 				SendMessage(Color.Purple + "Spawning " + e);
 				return;
@@ -148,10 +168,6 @@ namespace SpacecraftGT
 			_Conn.Transmit(PacketType.Entity, e.EntityID);
 		}
 		
-		override public string ToString()
-		{
-			return "[Entity.Player " + EntityID + ": " + Username + "]";
-		}
-		
+		#endregion
 	}
 }

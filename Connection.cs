@@ -411,7 +411,7 @@ namespace SpacecraftGT
 						Chunk c = Spacecraft.Server.World.GetChunkAt(x, z);
 						Pair<int, int> pos = c.GetChunkPos(x, z);
 						c.SetBlock(pos.First, y, pos.Second, Block.Air);
-						Transmit(PacketType.BlockChange, x, y, z, Block.Air, (sbyte) 0);
+						Spacecraft.Server.BlockChanged(x, y, z, Block.Air);
 					}
 					break;
 				}
@@ -420,8 +420,16 @@ namespace SpacecraftGT
 					int x = (int) packet[1];
 					sbyte y = (sbyte) packet[2];
 					int z = (int) packet[3];
-					sbyte face = (sbyte) packet[3];
-					short block = (short) packet[4];
+					sbyte face = (sbyte) packet[4];
+					short block = (short) packet[5];
+					
+					GetOffsetPos(ref x, ref y, ref z, face);
+					
+					Chunk c = Spacecraft.Server.World.GetChunkAt(x, z);
+					Pair<int, int> pos = c.GetChunkPos(x, z);
+					c.SetBlock(pos.First, y, pos.Second, Block.Brick);
+					Spacecraft.Server.BlockChanged(x, y, z, Block.Brick);
+					
 					break;
 				}
 				
@@ -434,6 +442,18 @@ namespace SpacecraftGT
 					Spacecraft.Log("[Packet] " + _Player.Username + " sent " + type);
 					break;
 				}
+			}
+		}
+		
+		private void GetOffsetPos(ref int x, ref sbyte y, ref int z, int face) {
+			switch(face) {
+				case 0: --y; break;
+				case 1: ++y; break;
+				case 2: --z; break;
+				case 3: ++z; break;
+				case 4: --x; break;
+				case 5: ++x; break;
+				default: break;
 			}
 		}
 	}

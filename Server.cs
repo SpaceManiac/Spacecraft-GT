@@ -93,6 +93,16 @@ namespace SpacecraftGT
 			}
 		}
 		
+		public void BlockChanged(int x, int y, int z, Block newBlock)
+		{
+			Chunk c = World.GetChunkAt(x, z);
+			foreach(Player p in PlayerList) {
+				if (p.VisibleChunks.Contains(c)) {
+					p.BlockChanged(x, y, z, newBlock);
+				}
+			}
+		}
+		
 		// ====================
 		// Private helpers.
 		

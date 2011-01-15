@@ -72,9 +72,9 @@ namespace SpacecraftGT
 		public List<Chunk> GetChunksInRange(Chunk c)
 		{
 			List<Chunk> r = new List<Chunk>();
-			for (int x = c.ChunkX - 2; x <= c.ChunkX + 2; ++x) {
-				for (int z = c.ChunkZ - 2; z <= c.ChunkZ + 2; ++z) {
-					if (Math.Abs(c.ChunkX - x) + Math.Abs(c.ChunkZ - z) < 4) {
+			for (int x = c.ChunkX - 5; x <= c.ChunkX + 5; ++x) {
+				for (int z = c.ChunkZ - 5; z <= c.ChunkZ + 5; ++z) {
+					if (Math.Abs(c.ChunkX - x) + Math.Abs(c.ChunkZ - z) < 8) {
 						r.Add(GetChunk(x, z));
 					}
 				}

@@ -21,6 +21,7 @@ namespace SpacecraftGT
 		private bool _Running;
 		private byte[] _Buffer;
 		private Player _Player;
+		private string _QuitMsg;
 		
 		public Connection(TcpClient client, Player player)
 		{
@@ -114,8 +115,6 @@ namespace SpacecraftGT
 		
 		private void ConnectionThread()
 		{
-			Spacecraft.Log("Connection thread " + _Client.GetHashCode() + " running.");
-			
 			Stopwatch clock = new Stopwatch();
 			clock.Start();
 			double lastKeepAlive = 0;
@@ -128,10 +127,6 @@ namespace SpacecraftGT
 							next = _TransmitQueue.Dequeue();
 						}
 						TransmitRaw(next);
-						if (next.Length > 0 && next[0] == (byte) PacketType.Disconnect) {
-							_Client.GetStream().Flush();
-							_Client.Close();
-						}
 					}
 					
 					if (!_Client.Connected) {
@@ -153,7 +148,7 @@ namespace SpacecraftGT
 				}
 				catch (Exception e) {
 					try {
-						DisconnectRaw("Server error: " + e.Message);
+						Disconnect("Server error: " + e.Message);
 					}
 					catch(Exception) {}
 					Spacecraft.LogError(e);
@@ -161,9 +156,10 @@ namespace SpacecraftGT
 				}
 			}
 			if (_Player.Spawned) {
+				Spacecraft.Log(_Player.Username + " has left (" + _QuitMsg + ")");
 				_Player.Despawn();
 			} else {
-				Spacecraft.Log("Anonymous connection thread stopped.");
+				Spacecraft.Log("/" + IPString + " disconnected (" + _QuitMsg + ")");
 			}
 		}
 		
@@ -174,18 +170,18 @@ namespace SpacecraftGT
 			}
 			catch (Exception) {
 				_Client.Close();
-				Spacecraft.Log("Disconnected on exception");
 				_Running = false;
 			}
 		}
 		
-		public void Disconnect(string message)
+		/* public void Disconnect(string message)
 		{
 			Transmit(PacketType.Disconnect, message);
-		}
+		} */
 		
-		public void DisconnectRaw(string message)
+		public void Disconnect(string message)
 		{
+			_QuitMsg = message;
 			lock (_TransmitQueue) {
 				_TransmitQueue.Clear();
 			}
@@ -327,8 +323,6 @@ namespace SpacecraftGT
 		{
 			PacketType type = (PacketType) (byte) packet[0];
 			
-			// Spacecraft.Log("Packet received: " + type);
-			
 			switch(type) {
 				case PacketType.Handshake: {
 					_Player.Username = (string) packet[1];
@@ -347,7 +341,7 @@ namespace SpacecraftGT
 						break;
 					}
 					if ((string) packet[2] != _Player.Username) {
-						Disconnect("Sent invalid username");
+						Disconnect("Usernames did not match");
 						break;
 					}
 					
@@ -356,6 +350,7 @@ namespace SpacecraftGT
 					Transmit(PacketType.LoginDetails, _Player.EntityID,
 						Spacecraft.Server.Name, Spacecraft.Server.Motd,
 						/* World.Seed */ (long) 0, /* World.Dimension */ (sbyte) 0);
+					Spacecraft.Log(_Player.Username + " (/" + IPString + ") has joined");
 					_Player.Spawn();
 					
 					break;

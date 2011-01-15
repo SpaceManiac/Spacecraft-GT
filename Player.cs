@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
+using System.Threading;
 
 namespace SpacecraftGT
 {
@@ -31,12 +32,11 @@ namespace SpacecraftGT
 			Spawned = true;
 			CurrentChunk = null;
 			X = Spacecraft.Server.World.SpawnX + 0.5;
-			Y = Spacecraft.Server.World.SpawnY + 5;
+			Y = Spacecraft.Server.World.SpawnY + 3;
 			Z = Spacecraft.Server.World.SpawnZ + 0.5;
 			Update();
 			_Conn.Transmit(PacketType.SpawnPosition, (int)X, (int)Y, (int)Z);
 			_Conn.Transmit(PacketType.PlayerPositionLook, X, Y, Y, Z, (float) 0, (float) 0, (sbyte) 1);
-			// _Conn.Transmit(PacketType.NamedEntitySpawn, EntityID, "Player", (int)X, (int)Y, (int)Z, (byte)0, (byte)0, (short)0);
 		}
 		
 		override public void Despawn()

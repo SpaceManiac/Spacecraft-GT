@@ -76,14 +76,12 @@ namespace SpacecraftGT
 		
 		public void Spawn(Player player)
 		{
-			Spacecraft.Log(player.Username + " has joined");
 			MessageAll(Color.Announce + player.Username + " has joined");
 		}
 		
 		public void Despawn(Player player)
 		{
 			MessageAll(Color.Announce + player.Username + " has left");
-			Spacecraft.Log(player.Username + " has left");
 		}
 		
 		public void MessageAll(string message)

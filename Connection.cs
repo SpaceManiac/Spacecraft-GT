@@ -100,6 +100,19 @@ namespace SpacecraftGT
 						case 'x':		// byte array
 							packet.Append((byte[]) args[i-1]);
 							break;
+					
+						case 'I':		// inventory entity
+							// short; if nonnegative, byte then short.
+							InventoryItem item = (InventoryItem) args[i - 1];
+							packet.Append(BitConverter.GetBytes(IPAddress.HostToNetworkOrder(item.Type)));
+							if (item.Type >= 0) {
+								packet.Append(item.Count);
+								packet.Append(BitConverter.GetBytes(IPAddress.HostToNetworkOrder(item.Damage)));
+							}
+							break;
+						
+						default:
+							throw new Exception("Unimplemented data type (transmit)");
 					}
 				}
 			}
@@ -286,16 +299,32 @@ namespace SpacecraftGT
 					
 					case 't':		// string
 						if ((bufPos + 2) > _Buffer.Length) return nPair;
-						int len = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(_Buffer, bufPos));
+						short len = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(_Buffer, bufPos));
 						if ((bufPos + 2 + len) > _Buffer.Length) return nPair;
 						data.Append((string) Encoding.UTF8.GetString(_Buffer, bufPos + 2, len));
 						bufPos += (2 + len);
 						break;
 					
-					case 'x':		// onos!
-						// TODO
-						return nPair;
-						//break;
+					case 'I':		// inventory entity
+						// short; if nonnegative, byte then short.
+						InventoryItem item;
+						if ((bufPos + 2) > _Buffer.Length) return nPair;
+						item.Type = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(_Buffer, bufPos));
+						if (item.Type >= 0) {
+							if ((bufPos + 3) > _Buffer.Length) return nPair;
+							item.Count = _Buffer[bufPos + 2];
+							item.Damage = (short) IPAddress.NetworkToHostOrder(BitConverter.ToInt16(_Buffer, bufPos + 3));
+							bufPos += 5;
+						} else {
+							item.Count = 0;
+							item.Damage = 0;
+							bufPos += 2;
+						}
+						data.Append(item);
+						break;
+					
+					default:
+						throw new Exception("Unimplemented data type (recieve)");
 				}
 			}
 			
@@ -416,7 +445,7 @@ namespace SpacecraftGT
 					sbyte y = (sbyte) packet[2];
 					int z = (int) packet[3];
 					sbyte face = (sbyte) packet[4];
-					short block = (short) packet[5];
+					InventoryItem block = (InventoryItem) packet[5];
 					
 					GetOffsetPos(ref x, ref y, ref z, face);
 					

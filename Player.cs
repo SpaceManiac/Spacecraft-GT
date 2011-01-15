@@ -101,12 +101,27 @@ namespace SpacecraftGT
 		
 		#endregion
 		
-		#region Connection Interface
+		#region Connection Interface: Misc
 		
 		public void SendMessage(string message)
 		{
 			_Conn.Transmit(PacketType.Message, message);
 		}
+		
+		public void BlockChanged(int x, int y, int z, Block block)
+		{
+			_Conn.Transmit(PacketType.BlockChange, x, (sbyte) y, z, (sbyte) block, (sbyte) 0);
+		}
+		
+		public void RecvMessage(string message)
+		{
+			Spacecraft.Log("<" + Username + "> " + message);
+			Spacecraft.Server.MessageAll("<" + Username + "> " + message);
+		}
+		
+		#endregion
+		
+		#region Connection Interface: Entities
 		
 		public void UpdateEntity(Entity e, double dx, double dy, double dz, bool rotchanged, bool forceabs)
 		{
@@ -131,15 +146,17 @@ namespace SpacecraftGT
 			}
 		}
 		
-		public void BlockChanged(int x, int y, int z, Block block)
-		{
-			_Conn.Transmit(PacketType.BlockChange, x, (sbyte) y, z, (sbyte) block, (sbyte) 0);
+		#endregion
+		
+		#region Connection Interface: Windows
+		
+		public void OpenWindow(Window window) {
+			_Conn.Transmit(PacketType.OpenWindow, (sbyte) window.WindowID, (sbyte) window.WindowType,
+				window.WindowTitle, (sbyte) window.Slots());
 		}
 		
-		public void RecvMessage(string message)
-		{
-			Spacecraft.Log("<" + Username + "> " + message);
-			Spacecraft.Server.MessageAll("<" + Username + "> " + message);
+		public void WindowSetSlot(Window window, short slot, InventoryItem item) {
+			_Conn.Transmit(PacketType.WindowSetSlot, (sbyte) window.WindowID, slot, item);
 		}
 		
 		#endregion

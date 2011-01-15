@@ -52,6 +52,10 @@
     <Compile Include="Connection.cs" />
     <Compile Include="Player.cs" />
     <Compile Include="Entities\Entity.cs" />
+    <Compile Include="Entities\InventoryItem.cs" />
+    <Compile Include="Entities\PlayerInventory.cs" />
+    <Compile Include="Windows\Window.cs" />
+    <Compile Include="Entities\PickupEntity.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
@@ -64,5 +68,6 @@
   <ItemGroup>
     <Folder Include="Constants\" />
     <Folder Include="Entities\" />
+    <Folder Include="Windows\" />
   </ItemGroup>
 </Project>

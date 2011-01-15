@@ -47,7 +47,7 @@ namespace SpacecraftGT
 		MapChunk = 0x33,            //   <--
 		MultiBlockChange = 0x34,    //   <--
 		BlockChange = 0x35,         //   <--
-		SuperMystery = 0x36,		//   <--
+		PlayNoteBlock = 0x36,		//   <--
 		// Unused space
 		Explosion = 0x3C,			//   <--
 		// Unused space
@@ -122,7 +122,7 @@ namespace SpacecraftGT
 			"bisibbbix",		// mapchunk
 			"biisxxx",			// multi-block change
 			"bibibb",			// block change
-			"bisibb",			// super mystery
+			"bisibb",			// play note block
 			"", "", "", "", "",	// unused space
 			"bdddfib",			// explosion
 			"", "", "", "", "",

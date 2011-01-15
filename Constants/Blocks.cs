@@ -2,7 +2,7 @@ using System;
 
 namespace SpacecraftGT
 {
-	public enum Block
+	public enum Block : byte
 	{
 		Air = 0,
 		Rock = 1,
@@ -26,24 +26,16 @@ namespace SpacecraftGT
 		Sponge = 19,
 		Glass = 20,
 
-		/* Colored cloths not available in Alpha
-		Red = 21,
-		Orange = 22,
-		Yellow = 23,
-		Lime = 24,
-		Green = 25,
-		Teal = 26,
-		Aqua = 27,
-		Cyan = 28,
-		Blue = 29,
-		Indigo = 30,
-		Violet = 31,
-		Magenta = 32,
-		Pink = 33,
-		Black = 34,
-		Gray = 35, */
-		WhiteCloth = 36,
-
+		LapisOre = 21,
+		LapisBlock = 22,
+		Dispenser = 23,
+		Sandstone = 24,
+		NoteBlock = 25,
+		/* Unused space */
+		
+		Cloth = 35,
+		/* Unused space */
+		
 		YellowFlower = 37,
 		RedFlower = 38,
 		RedMushroom = 39,
@@ -104,10 +96,11 @@ namespace SpacecraftGT
 		Nethermud = 88,
 		Lightstone = 89,
 		Portal = 90,
-		LitPumpkin = 91
+		LitPumpkin = 91,
+		CakeBlock = 92
 	}
 	
-	public enum Item
+	public enum Item : short
 	{
 		IronShovel = 256,
 		IronPick = 257,
@@ -203,12 +196,69 @@ namespace SpacecraftGT
 		Watch = 347,
 		Lightstone = 348,
 		RawFish = 349,
-		CookedFish = 350
+		CookedFish = 350,
+		InkSack = 351,
+		Bone = 352,
+		Sugar = 353,
+		Cake = 354
 	}
 	
-	public enum Record
+	public enum Record : short
 	{
 		Gold = 2256,
 		Green = 2257
+	}
+	
+	public static class Metadata
+	{
+		public enum Wood : byte {
+			Normal, Redwood, Birch
+		}
+		public enum Liquid : byte {
+			Full = 0, LavaMax = 3, WaterMax = 7, Falling = 8
+		}
+		public enum Wool : byte {
+			White, Orange, Magenta, LightBlue, Yellow, LightGreen, Pink, Gray,
+			LightGray, Cyan, Purple, Blue, Brown, DarkGreen, Red, Black
+		}
+		public enum Dyes : byte {
+			InkSack, RoseRed, CactusGreen, CocoBeans, LapisLazuli, Purple, Cyan, LightGray,
+			Gray, Pink, Lime, DandelionYellow, LightBlue, Magenta, Orange, BoneMeal
+		}
+		public enum Torch : byte {
+			South = 1, North, East, West, Standing
+		}
+		public enum Tracks : byte {
+			EastWest, NorthSouth, RiseSouth, RiseNorth, RiseEast, RiseWest,
+			NECorner, SECorner, SWCorner, NWCorner
+		}
+		public enum Ladders : byte {
+			East = 2, West, North, South
+		}
+		public enum Stairs : byte {
+			South, North, West, East
+		}
+		public enum Lever : byte {
+			SouthWall = 1, NorthWall, WestWall, EastWall, EWGround, NSGround,
+			IsFlipped = 8
+		}
+		public enum Door : byte {
+			Northeast, Southeast, Southwest, Northwest,
+			IsOpen = 4, IsTopHalf = 8
+		}
+		public enum Button : byte {
+			SouthWall = 1, NorthWall, WestWall, EastWall,
+			IsPressed = 8
+		}
+		public enum Sign : byte {
+			West = 0, North = 4, East = 8, South = 0xC,
+			WallEast = 2, WallWest = 3, WallNorth = 4, WallSouth = 5
+		}
+		public enum Furnace : byte {
+			East = 2, West, North, South
+		}
+		public enum Pumpkin : byte {
+			East, South, West, North
+		}
 	}
 }

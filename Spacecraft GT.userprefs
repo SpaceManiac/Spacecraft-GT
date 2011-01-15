@@ -1,17 +1,17 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" ctype="Workspace" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Connection.cs" ctype="Workbench">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Player.cs" ctype="Workbench">
     <Files>
-      <File FileName="Spacecraft.cs" Line="71" Column="4" />
-      <File FileName="Server.cs" Line="66" Column="33" />
-      <File FileName="Connection.cs" Line="400" Column="29" />
-      <File FileName="Player.cs" Line="50" Column="47" />
-      <File FileName="Map.cs" Line="69" Column="77" />
-      <File FileName="Chunk.cs" Line="111" Column="84" />
+      <File FileName="Spacecraft.cs" Line="1" Column="1" />
+      <File FileName="Server.cs" Line="100" Column="39" />
+      <File FileName="Connection.cs" Line="302" Column="15" />
+      <File FileName="Player.cs" Line="127" Column="12" />
+      <File FileName="Map.cs" Line="1" Column="1" />
+      <File FileName="Chunk.cs" Line="112" Column="4" />
       <File FileName="Entities\Entity.cs" Line="1" Column="1" />
-      <File FileName="Utils\Configuration.cs" Line="12" Column="26" />
-      <File FileName="Constants\Blocks.cs" Line="29" Column="43" />
-      <File FileName="Constants\Packets.cs" Line="91" Column="37" />
+      <File FileName="Utils\Configuration.cs" Line="1" Column="1" />
+      <File FileName="Constants\Blocks.cs" Line="1" Column="1" />
+      <File FileName="Constants\Packets.cs" Line="91" Column="10" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
@@ -21,7 +21,7 @@
             <Node name="Constants" expanded="True" />
             <Node name="Entities" expanded="True" />
             <Node name="Utils" expanded="True" />
-            <Node name="Connection.cs" selected="True" />
+            <Node name="Player.cs" selected="True" />
           </Node>
         </State>
       </Pad>

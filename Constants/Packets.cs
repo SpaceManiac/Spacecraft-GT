@@ -23,12 +23,13 @@ namespace SpacecraftGT
 		PlayerHolding = 0x10,       //   <->
 		// Unused space
 		ArmAnimation = 0x12,        //   <->
-		// Unused space
+		EntityAction = 0x13,		//   <--
 		NamedEntitySpawn = 0x14,    //   <--
 		PickupSpawn = 0x15,         //   <->
 		CollectItem = 0x16,         //   <--
-		AddObjectVehicle = 0x17,    //   <--
+		VehicleSpawn = 0x17,        //   <--
 		MobSpawn = 0x18,            //   <--
+		PaintingSpawn = 0x19,		//   <--
 		// Unused space
 		EntityVelocity = 0x1C,		//   <--
 		DestroyEntity = 0x1D,       //   <--
@@ -40,11 +41,13 @@ namespace SpacecraftGT
 		// Unused space
 		EntityDamage = 0x26,		//   <--
 		AttachEntity = 0x27,		//   <--
+		EntityMetadata = 0x28,		//   <--
 		// Unused space
 		PreChunk = 0x32,            //   <--
 		MapChunk = 0x33,            //   <--
 		MultiBlockChange = 0x34,    //   <--
 		BlockChange = 0x35,         //   <--
+		SuperMystery = 0x36,		//   <--
 		// Unused space
 		Explosion = 0x3C,			//   <--
 		// Unused space
@@ -71,6 +74,8 @@ namespace SpacecraftGT
 		// d - double(8)
 		// t - string - short-prefixed
 		// x - bytearray - special handling
+		// M - entity metadata - special handling
+		// I - inventory item - special handling (short; then if not -1: byte, short)
 		
 		public static string[] Data = {
 			"b",				// keep alive - 0x00
@@ -78,7 +83,7 @@ namespace SpacecraftGT
 			"bt",				// handshake
 			"bt",				// chat message
 			"bl",				// time update
-			"biss",				// entity equipment
+			"bisss",			// entity equipment
 			"biii",				// spawn position
 			"biib",				// interact entity
 			"bs",				// update health
@@ -92,13 +97,14 @@ namespace SpacecraftGT
 			"bs",				// player holding
 			"",					// unused space
 			"bib",				// arm animation
-			"",					// unused space
+			"bib",				// entity action
 			"bitiiibbs",		// named entity spawn
-			"bisbiiibbb",		// pickup spawn
+			"bisbsiiibbb",		// pickup spawn
 			"bii",				// collect item
 			"bibiii",			// vehicle spawn
-			"bibiiibb",			// mob spawn
-			"", "", "",			// unused space
+			"bibiiibbM",		// mob spawn
+			"bisiiii",			// painting spawn
+			"", "",				// unused space
 			"bisss",			// entity velocity
 			"bi",				// destroy entity
 			"bi",				// entity base
@@ -109,14 +115,15 @@ namespace SpacecraftGT
 			"", "", "", 		// unused space
 			"bssb",				// entity damage
 			"bii",				// attach entity
-			"", "", "", "", "",	// unused space
+			"biM",				// entity metadata
+			"", "", "", "",		// unused space
 			"", "", "", "", "", // unused space
 			"biib",				// prechunk
 			"bisibbbix",		// mapchunk
 			"biisxxx",			// multi-block change
 			"bibibb",			// block change
+			"bisibb",			// super mystery
 			"", "", "", "", "",	// unused space
-			"",					// unused space
 			"bdddfib",			// explosion
 			"", "", "", "", "",
 			"", "", "", "", "",
@@ -128,8 +135,8 @@ namespace SpacecraftGT
 			"", "", "", "",		// unused space
 			"bbbtb",			// open window
 			"bb",				// close window
-			"bbsbssbb",			// window click
-			"bbssbb",			// window slot
+			"bbsbsI",			// window click
+			"bbsI",				// window slot
 			"bbsx",				// window items
 			"bbss",				// window progress
 			"bbsb",				// transaction

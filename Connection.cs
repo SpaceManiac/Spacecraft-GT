@@ -112,7 +112,7 @@ namespace SpacecraftGT
 							break;
 						
 						default:
-							throw new Exception("Unimplemented data type (transmit)");
+							throw new NotImplementedException("Unimplemented data type (transmit)");
 					}
 				}
 			}
@@ -324,7 +324,7 @@ namespace SpacecraftGT
 						break;
 					
 					default:
-						throw new Exception("Unimplemented data type (recieve)");
+						throw new NotImplementedException("Unimplemented data type (recieve)");
 				}
 			}
 			

@@ -10,12 +10,14 @@ namespace SpacecraftGT
 	{
 		public string WorldName;
 		
+		private int _DespawnTimer;
 		private Dictionary<long, Chunk> _Chunks;
 		private BinaryTag _Structure;
 		
 		public Map(string Name)
 		{
 			WorldName = Name;
+			_DespawnTimer = 0;
 			_Chunks = new Dictionary<long, Chunk>();
 			
 			StreamReader rawReader = new StreamReader(Name + "/level.dat");
@@ -45,8 +47,48 @@ namespace SpacecraftGT
 		
 		public void ForceSave()
 		{
-			foreach(KeyValuePair<long, Chunk> kvp in _Chunks) {
+			foreach (KeyValuePair<long, Chunk> kvp in _Chunks) {
 				kvp.Value.Save();
+			}
+		}
+		
+		public void Update()
+		{
+			List<Entity> entities = new List<Entity>();
+			foreach (KeyValuePair<long, Chunk> kvp in new Dictionary<long, Chunk>(_Chunks)) {
+				foreach (Entity e in kvp.Value.Entities) {
+					entities.Add(e);
+				}
+			}
+			
+			// Update entities as needed
+			foreach (Entity e in entities) {
+				// Spacecraft.Log("Updating " + e);
+				e.Update();
+			}
+			
+			// Remove from memory chunks that nobody can see
+			_DespawnTimer = (_DespawnTimer + 1) % 20;
+			if (_DespawnTimer == 0) {
+				List<Chunk> chunksVisible = new List<Chunk>();
+				foreach (Entity e in entities) {
+					if (e is Player) {
+						foreach (Chunk c in GetChunksInRange(e.CurrentChunk)) {
+							chunksVisible.Add(c);
+						}
+					}
+				}
+				foreach (Chunk c in GetChunksInRange(GetChunkAt(SpawnX, SpawnZ))) {
+					chunksVisible.Add(c);
+				}
+				int i = 0;
+				foreach (KeyValuePair<long, Chunk> kvp in new Dictionary<long, Chunk>(_Chunks)) {
+					if (!chunksVisible.Contains(kvp.Value)) {
+						_Chunks.Remove(kvp.Key);
+						++i;
+					}
+				}
+				// Spacecraft.Log("Unloaded " + i + " chunks");
 			}
 		}
 		

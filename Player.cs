@@ -119,6 +119,11 @@ namespace SpacecraftGT
 			Spacecraft.Server.MessageAll("<" + Username + "> " + message);
 		}
 		
+		public void Disconnect(string message)
+		{
+			_Conn.Disconnect(message);
+		}
+		
 		#endregion
 		
 		#region Connection Interface: Entities
@@ -177,7 +182,13 @@ namespace SpacecraftGT
 				Player p = (Player) e;
 				_Conn.Transmit(PacketType.NamedEntitySpawn, p.EntityID,
 					p.Username, (int)(p.X * 32), (int)(p.Y * 32), (int)(p.Z * 32),
-					(sbyte)0, (sbyte)0, (short) Block.Brick);
+					p.Yaw, p.Pitch, (short) Block.Brick);
+			} else if (e is PickupEntity) {
+				PickupEntity p = (PickupEntity) e;
+				_Conn.Transmit(PacketType.PickupSpawn, p.EntityID,
+					p.Item.Type, (sbyte) p.Item.Count, p.Item.Damage,
+					(int)(p.X * 32), (int)(p.Y * 32), (int)(p.Z * 32),
+					p.Yaw, p.Pitch, (sbyte) 0);
 			} else {
 				SendMessage(Color.Purple + "Spawning " + e);
 				return;

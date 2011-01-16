@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -37,7 +38,6 @@ namespace SpacecraftGT
 		
 		public void Run()
 		{
-			
 			World = new Map(WorldName);
 			World.Time = 0;
 			if (!File.Exists(WorldName + "/level.dat")) {
@@ -50,9 +50,13 @@ namespace SpacecraftGT
 			Spacecraft.Log("Listening on port " + Port);
 			Running = true;
 			
+			InventoryItem i = new InventoryItem(3);
+			PickupEntity e = new PickupEntity(World.SpawnX, World.SpawnY, World.SpawnZ, i);
+			
 			Stopwatch clock = new Stopwatch();
 			clock.Start();
 			double lastUpdate = 0;
+			double lastGc = 0;
 			
 			while (Running) {
 				// Check for new connections
@@ -61,11 +65,15 @@ namespace SpacecraftGT
 					//Running = false;
 				}
 				
-				if (lastUpdate + 1 < clock.Elapsed.TotalSeconds) {
-					foreach (Player p in PlayerList) {
-						if (p.Spawned) p.Update();
-					}
-				}	
+				if (lastUpdate + 0.2 < clock.Elapsed.TotalSeconds) {
+					World.Update();
+					lastUpdate = clock.Elapsed.TotalSeconds;
+					Spacecraft.Log("U");
+				}
+				
+				if (lastGc + 30 < clock.Elapsed.TotalSeconds) {
+					GC.Collect();
+				}
 				
 				// Rest
 				Thread.Sleep(30);

@@ -53,9 +53,9 @@
     <Compile Include="Player.cs" />
     <Compile Include="Entities\Entity.cs" />
     <Compile Include="Entities\InventoryItem.cs" />
-    <Compile Include="Entities\PlayerInventory.cs" />
     <Compile Include="Windows\Window.cs" />
     <Compile Include="Entities\PickupEntity.cs" />
+    <Compile Include="Windows\PlayerInventory.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

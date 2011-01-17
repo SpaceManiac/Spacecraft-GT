@@ -370,6 +370,7 @@ namespace SpacecraftGT
 						break;
 					}
 					if ((string) packet[2] != _Player.Username) {
+						Spacecraft.Log("Usernames did not match: Handshake=" + _Player.Username + ", Login=" + (string)packet[2]);
 						Disconnect("Usernames did not match");
 						break;
 					}
@@ -434,8 +435,12 @@ namespace SpacecraftGT
 					if (status == 0) {
 						Chunk c = Spacecraft.Server.World.GetChunkAt(x, z);
 						Pair<int, int> pos = c.GetChunkPos(x, z);
+						Block b = c.GetBlock(pos.First, y, pos.Second);
+						if (b == Block.Air) break;
+						// TODO: Ensure player can actually destroy this block.
 						c.SetBlock(pos.First, y, pos.Second, Block.Air);
 						Spacecraft.Server.BlockChanged(x, y, z, Block.Air);
+						new PickupEntity(x, y, z, new InventoryItem((short) b));
 					}
 					break;
 				}
@@ -449,16 +454,64 @@ namespace SpacecraftGT
 					
 					GetOffsetPos(ref x, ref y, ref z, face);
 					
+					InventoryItem i = _Player.Inventory.slots[36 + _Player.SlotSelected];
+					if (block.Type != i.Type) break;
+					if (i.Type <= 0 || i.Type >= 256) break;
+					
 					Chunk c = Spacecraft.Server.World.GetChunkAt(x, z);
 					Pair<int, int> pos = c.GetChunkPos(x, z);
-					c.SetBlock(pos.First, y, pos.Second, Block.Brick);
-					Spacecraft.Server.BlockChanged(x, y, z, Block.Brick);
+					c.SetBlock(pos.First, y, pos.Second, (Block) i.Type);
+					Spacecraft.Server.BlockChanged(x, y, z, (Block) i.Type);
+					
+					if (--i.Count == 0) {
+						i.Type = -1;
+						i.Damage = 0;
+					}
+					_Player.Inventory.SetSlot((short)(36 + _Player.SlotSelected), i);
 					
 					break;
 				}
 				
-				case PacketType.ArmAnimation: {
-					// TODO
+				case PacketType.WindowClick: {
+					sbyte id = (sbyte) packet[1];
+					short slot = (short) packet[2];
+					byte rclick = (byte) (sbyte) packet[3];
+					short action = (short) packet[4];
+					InventoryItem item = (InventoryItem) packet[5];
+					
+					bool success = false;
+					if (id == 0) {
+						success = _Player.Inventory.Click(_Player, slot, rclick, item);
+					} else {
+						foreach (Window w in Spacecraft.Server.WindowList) {
+							if (w.ID == (byte) id) {
+								success = w.Click(_Player, slot, rclick, item);
+								break;
+							}
+						}
+					}
+					Transmit(PacketType.Transaction, id, action, (sbyte) (success ? 1 : 0));
+					
+					break;
+				}
+				
+				case PacketType.CloseWindow: {
+					sbyte id = (sbyte) packet[1];
+					if (id == 0) {
+						_Player.Inventory.Close(_Player);
+					} else {
+						foreach (Window w in Spacecraft.Server.WindowList) {
+							if (w.ID == (byte) id) {
+								w.Close(_Player);
+								break;
+							}
+						}
+					}
+					break;
+				}
+				
+				case PacketType.PlayerHolding: {
+					_Player.SlotSelected = (int) (short) packet[1];
 					break;
 				}
 				

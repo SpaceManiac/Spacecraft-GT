@@ -103,6 +103,12 @@ namespace SpacecraftGT
 			return new Pair<int, int>((x - 16*ChunkX) % 16, (z - 16*ChunkZ) % 16);
 		}
 		
+		public Pair<int, int> GetChunkPos(double x, double z)
+		{
+			int xNeg = (x < 0 ? 1 : 0), zNeg = (z < 0 ? 1 : 0);
+			return new Pair<int, int>(((int)x + xNeg - 16*ChunkX) % 16, ((int)z + zNeg - 16*ChunkZ) % 16);
+		}
+		
 		// ====================
 		// Tile gets/sets
 		

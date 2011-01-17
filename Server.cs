@@ -19,6 +19,7 @@ namespace SpacecraftGT
 		
 		public Map World;
 		public List<Player> PlayerList;
+		public List<Window> WindowList;
 		
 		private TcpListener _Listener;
 		
@@ -68,7 +69,6 @@ namespace SpacecraftGT
 				if (lastUpdate + 0.2 < clock.Elapsed.TotalSeconds) {
 					World.Update();
 					lastUpdate = clock.Elapsed.TotalSeconds;
-					Spacecraft.Log("U");
 				}
 				
 				if (lastGc + 30 < clock.Elapsed.TotalSeconds) {
@@ -114,7 +114,8 @@ namespace SpacecraftGT
 		
 		private void AcceptConnection(TcpClient client)
 		{
-			PlayerList.Add(new Player(client));
+			Player p = new Player(client);
+			PlayerList.Add(p);
 		}
 	}
 }

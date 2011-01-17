@@ -14,6 +14,13 @@ namespace SpacecraftGT
 		public List<Chunk> VisibleChunks;
 		public List<Entity> VisibleEntities;
 		
+		public PlayerInventory Inventory;
+		public Window CurrentWindow;
+		public InventoryItem WindowHolding;
+		
+		private InventoryItem[] _LastEquipment;
+		public int SlotSelected;
+		
 		public Player(TcpClient client)
 		{
 			_Conn = new Connection(client, this);
@@ -22,6 +29,13 @@ namespace SpacecraftGT
 			CurrentChunk = null;
 			VisibleChunks = new List<Chunk>();
 			VisibleEntities = new List<Entity>();
+			Inventory = new PlayerInventory(this);
+			CurrentWindow = null;
+			WindowHolding = new InventoryItem(-1);
+			_LastEquipment = new InventoryItem[5];
+			for (int i = 0; i < 5; ++i) {
+				_LastEquipment[i] = new InventoryItem(-1);
+			}
 		}
 		
 		#region Entity Overrides
@@ -90,6 +104,29 @@ namespace SpacecraftGT
 			}
 			VisibleEntities = newVisibleEntities;
 			
+			if (Inventory.slots[36 + SlotSelected].Type != _LastEquipment[0].Type) {
+				_LastEquipment[0] = Inventory.slots[36 + SlotSelected];
+				foreach (Player p in Spacecraft.Server.PlayerList) {
+					if (p != this && p.VisibleEntities.Contains(this)) {
+						p._Conn.Transmit(PacketType.EntityEquipment, EntityID,
+							(short) 0, (short) _LastEquipment[0].Type,
+							(short) _LastEquipment[0].Damage);
+					}
+				}
+			}
+			
+			for (int i = 0; i < 4; ++i) {
+				if (Inventory.slots[5 + i].Type != _LastEquipment[i + 1].Type) {
+					foreach (Player p in Spacecraft.Server.PlayerList) {
+						if (p != this && p.VisibleEntities.Contains(this)) {
+							p._Conn.Transmit(PacketType.EntityEquipment, EntityID,
+								(short) (i + 1), _LastEquipment[i + 1].Type,
+								_LastEquipment[i + 1].Damage);
+						}
+					}
+				}
+			}
+			
 			_Conn.Transmit(PacketType.TimeUpdate, Spacecraft.Server.World.Time);
 			base.Update();
 		}
@@ -116,7 +153,13 @@ namespace SpacecraftGT
 		public void RecvMessage(string message)
 		{
 			Spacecraft.Log("<" + Username + "> " + message);
-			Spacecraft.Server.MessageAll("<" + Username + "> " + message);
+			if (message[0] == '/') {
+				if (message == "/item") {
+					Inventory.AddItem(new InventoryItem((short) Block.Dispenser));
+				}
+			} else {
+				Spacecraft.Server.MessageAll("<" + Username + "> " + message);
+			}
 		}
 		
 		public void Disconnect(string message)
@@ -151,17 +194,29 @@ namespace SpacecraftGT
 			}
 		}
 		
+		public void PickupCollected(PickupEntity pickup, Player player) {
+			_Conn.Transmit(PacketType.CollectItem, pickup.EntityID, player.EntityID);
+		}
+		
 		#endregion
 		
 		#region Connection Interface: Windows
 		
 		public void OpenWindow(Window window) {
-			_Conn.Transmit(PacketType.OpenWindow, (sbyte) window.WindowID, (sbyte) window.WindowType,
-				window.WindowTitle, (sbyte) window.Slots());
+			_Conn.Transmit(PacketType.OpenWindow, (sbyte) window.ID, (sbyte) window.Type,
+				window.Title, (sbyte) window.slots.Length);
+			// TODO: Transmit items in the window.
 		}
 		
 		public void WindowSetSlot(Window window, short slot, InventoryItem item) {
-			_Conn.Transmit(PacketType.WindowSetSlot, (sbyte) window.WindowID, slot, item);
+			// Spacecraft.Log(this + " setting slot " + slot + " of " + window.ID +  " to " + item);
+			_Conn.Transmit(PacketType.WindowSetSlot, (sbyte) window.ID, slot, item);
+		}
+		
+		public void SetHolding(InventoryItem item) {
+			// Spacecraft.Log(this + " setting holding to " + item);
+			_Conn.Transmit(PacketType.WindowSetSlot, (sbyte) -1, (short) -1, item);
+			WindowHolding = item;
 		}
 		
 		#endregion

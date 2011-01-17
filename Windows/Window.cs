@@ -8,17 +8,19 @@ namespace SpacecraftGT
 		private static byte _NextID = 2;
 		protected List<Player> _Viewers;
 		
-		public byte WindowID;
-		public byte WindowType;
-		public string WindowTitle;
+		public byte ID;
+		public byte Type;
+		public string Title;
 		
-		public Window(byte type, string title) {
+		public InventoryItem[] slots { get; protected set; }
+		
+		protected Window(byte type, string title) {
 			_Viewers = new List<Player>();
-			WindowID = _NextID;
+			ID = _NextID;
 			if (++_NextID > 125) _NextID = 2;
 			
-			WindowType = type;
-			WindowTitle = title;
+			Type = type;
+			Title = title;
 		}
 		
 		virtual public void Open(Player player) {
@@ -28,12 +30,15 @@ namespace SpacecraftGT
 		
 		virtual public void Close(Player player) {
 			_Viewers.Remove(player);
+			if (_Viewers.Count == 0) {
+				Spacecraft.Server.WindowList.Remove(this);
+			}
 		}
 		
-		public abstract bool Click(short slot, byte type, short actionID, InventoryItem item);
-		public abstract short Slots();
+		public abstract bool Click(Player p, short slot, byte type, InventoryItem item);
 		
-		protected void _SetSlot(short slot, InventoryItem item) {
+		public void SetSlot(short slot, InventoryItem item) {
+			slots[slot] = item;
 			foreach (Player player in _Viewers) {
 				player.WindowSetSlot(this, slot, item);
 			}
